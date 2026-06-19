@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'missing config' }, { status: 500 })
   }
 
-  const supabase = createClient(url, serviceKey)
+  const supabase = createClient(url, serviceKey, { db: { schema: 'tstack' } })
   const today = new Date()
   const limit = new Date(today.getTime() + 2 * 86400000).toISOString().slice(0, 10)
 

@@ -18,10 +18,10 @@ flowchart LR
     API["/api/reminders<br/>(cron promemoria)"]
   end
 
-  subgraph Supabase["🗄️ Supabase"]
-    Auth["Auth"]
-    DB[("Postgres<br/>+ RLS + viste")]
-    Storage["Storage<br/>bucket attachments"]
+  subgraph Supabase["🗄️ Supabase — progetto bussola"]
+    Auth["Auth (condiviso)"]
+    DB[("Postgres · schema tstack<br/>+ RLS + viste")]
+    Storage["Storage<br/>bucket tstack-attachments"]
   end
 
   UI -->|HTTP| Proxy

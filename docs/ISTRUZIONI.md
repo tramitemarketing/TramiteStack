@@ -7,27 +7,26 @@ Guida pratica per mettere in piedi l'app e usarla. Due parti:
 
 ## A) Setup tecnico
 
-### 1. Creare il progetto Supabase
-1. Vai su [supabase.com](https://supabase.com) → **New project** (regione EU consigliata, es. Frankfurt).
-2. Annota la **Database password**.
-3. Da **Project Settings → API** copia:
-   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon public` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `service_role` (segreta) → `SUPABASE_SERVICE_ROLE_KEY`
+> ⚙️ **Già fatto per te:** lo schema `tstack` è stato creato sul progetto Supabase **"bussola"**
+> (`bxmatbhaxkdsuzcojesj`), con tabelle, viste bilancio, RLS, bucket `tstack-attachments`, dati demo
+> e profili per gli utenti esistenti. Le chiavi pubbliche sono in `.env.production`. I passi sotto
+> servono solo per ricreare l'ambiente altrove o per capire com'è configurato.
 
-### 2. Creare lo schema del database
-1. Apri **SQL Editor** nella dashboard Supabase.
-2. Incolla **tutto** il contenuto di `supabase/migrations/0001_init.sql` ed esegui (**Run**).
-   - Crea tabelle, viste bilancio, trigger, **RLS** e il bucket `attachments`.
-3. (Facoltativo) Per dati di esempio esegui `supabase/seed.sql` **dopo** aver creato almeno un utente.
+### 1. Database (progetto "bussola", schema dedicato `tstack`)
+T-Stack **non usa un progetto nuovo**: vive nello schema `tstack` dentro il progetto bussola, così
+da non interferire con l'app già presente. Per (ri)applicarlo:
+1. **SQL Editor** della dashboard Supabase → incolla `supabase/migrations/0001_tstack_init.sql` → **Run**.
+   Crea schema `tstack`, tabelle, viste, **RLS**, bucket `tstack-attachments`, grant ed **espone lo
+   schema all'API** (`pgrst.db_schemas = 'public, graphql_public, tstack'`).
+2. (Facoltativo) Dati demo: esegui `supabase/seed.sql`.
 
-> In alternativa, con la Supabase CLI: `supabase db push` (richiede progetto collegato).
+> Lo schema `tstack` è esposto all'API; i client Supabase usano `db: { schema: 'tstack' }` (già nel codice).
 
-### 3. Configurare le variabili d'ambiente
-```bash
-cp .env.example .env.local
-```
-Compila `.env.local` con i valori del punto 1. Imposta anche un `CRON_SECRET` a piacere.
+### 2. Variabili d'ambiente
+- Le **chiavi pubbliche** (URL + anon key del progetto bussola) sono già in **`.env.production`**
+  (sicure: protette da RLS). Per il locale: `cp .env.production .env.local`.
+- Per il **cron promemoria** servono, da impostare nelle env di Vercel (segrete):
+  `SUPABASE_SERVICE_ROLE_KEY` (Dashboard → Project Settings → API) e un `CRON_SECRET` a piacere.
 
 ### 4. Avviare in locale
 ```bash
@@ -50,15 +49,18 @@ L'app **non** ha registrazione aperta. L'admin crea gli utenti:
 2. Inserisci email + password e crea. Il profilo nasce in automatico (trigger `on_auth_user_created`).
 3. Comunica le credenziali al dipendente (che potrà poi cambiare password).
 
+> Il profilo T-Stack viene creato **in automatico al primo accesso** (lazy). In più, un profilo
+> esiste già per gli utenti presenti nel progetto. Tabella: `tstack.profiles`.
+
 **Rendere admin un utente:** nel **SQL Editor**:
 ```sql
-update profiles set role = 'admin'
+update tstack.profiles set role = 'admin'
 where id = (select id from auth.users where email = 'tu@tramitemarketing.it');
 ```
 
-**Disattivare un dipendente** (toglie l'accesso ai dati senza cancellarlo):
+**Disattivare un dipendente** (toglie l'accesso ai dati di T-Stack senza cancellare l'account):
 ```sql
-update profiles set active = false where id = '<user-id>';
+update tstack.profiles set active = false where id = '<user-id>';
 ```
 
 ### 7. Installare l'app sul telefono (PWA)
@@ -89,5 +91,7 @@ update profiles set active = false where id = '<user-id>';
 - **Non riesco ad accedere:** verifica che l'account sia stato creato dall'admin e che `active = true`.
 - **Pagina vuota / errori dati:** controlla che le variabili `NEXT_PUBLIC_SUPABASE_*` siano corrette
   e che la migration sia stata eseguita.
-- **Upload allegati non funziona:** assicurati che la migration abbia creato il bucket `attachments`
-  e le relative policy di storage.
+- **Upload allegati non funziona:** assicurati che la migration abbia creato il bucket
+  `tstack-attachments` e le relative policy di storage.
+- **Errori "schema must be one of...":** verifica che lo schema `tstack` sia esposto all'API
+  (la migration lo fa con `alter role authenticator set pgrst.db_schemas = ...; notify pgrst, ...`).

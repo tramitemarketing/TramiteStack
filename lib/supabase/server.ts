@@ -10,6 +10,8 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Schema dedicato `tstack` dentro il progetto condiviso "bussola".
+      db: { schema: 'tstack' },
       cookies: {
         getAll() {
           return cookieStore.getAll()

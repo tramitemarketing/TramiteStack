@@ -3,6 +3,13 @@
 Revisione dello scaffold MVP. Stato: **build ✓, lint ✓, typecheck ✓**.
 Legenda severità: 🔴 alta · 🟡 media · 🟢 bassa/nota.
 
+> **Aggiornamento integrazione (bussola):** lo schema è stato spostato in uno **schema dedicato
+> `tstack`** dentro il progetto Supabase esistente "bussola", per non collidere con l'app già
+> presente (che ha una tabella `public.tasks` diversa). Nessun oggetto condiviso toccato (niente
+> trigger su `auth.users`, bucket `tstack-attachments`, esposizione schema additiva). Migration
+> applicata e `get_advisors` eseguito: l'unico warning introdotto (`set_updated_at` search_path) è
+> stato **corretto**; gli altri warning sono preesistenti di bussola.
+
 ## Sintesi
 Base solida e coerente: separazione netta tra lettura (Server Components) e scrittura
 (Server Actions), RLS attiva su tutte le tabelle, tipi del DB centralizzati, UI mobile-first.

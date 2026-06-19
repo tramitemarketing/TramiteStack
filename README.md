@@ -30,6 +30,10 @@ progetto/cliente** (spese, guadagni, margini, income dei lavori completati).
 
 > ⚠️ **Next.js 16** ha rinominato `middleware.ts` in **`proxy.ts`**. Vedi `AGENTS.md`.
 
+> 🗄️ **Database:** T-Stack usa il progetto Supabase **"bussola"** ma in uno **schema dedicato `tstack`**,
+> per convivere senza conflitti con l'app già presente in quel progetto. I client impostano
+> `db: { schema: 'tstack' }`. Bucket allegati: `tstack-attachments`.
+
 ## Avvio rapido
 
 ```bash
@@ -37,11 +41,12 @@ progetto/cliente** (spese, guadagni, margini, income dei lavori completati).
 npm install
 
 # 2. Variabili d'ambiente
-cp .env.example .env.local   # poi compila URL e chiavi Supabase
+#    Le chiavi PUBBLICHE sono già in .env.production (progetto bussola).
+#    Per lo sviluppo locale puoi copiarle in .env.local.
+cp .env.production .env.local
 
-# 3. Database: applica la migration su Supabase
-#    (Dashboard → SQL Editor, incolla supabase/migrations/0001_init.sql)
-#    Dati demo opzionali: supabase/seed.sql
+# 3. Database: lo schema `tstack` è già applicato sul progetto bussola
+#    (migration: supabase/migrations/0001_tstack_init.sql, dati demo: supabase/seed.sql)
 
 # 4. Sviluppo
 npm run dev        # http://localhost:3000

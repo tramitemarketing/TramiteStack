@@ -10,6 +10,9 @@ bilancio per progetto/cliente. **Lingua UI: italiano. Valuta: EUR.**
 - `cookies()` e `params` delle route dinamiche sono **asincroni** (`await`).
 - **Tailwind CSS v4** — sintassi `@import "tailwindcss"` + `@theme` in `app/globals.css` (niente `tailwind.config`).
 - **Supabase** per DB/Auth/Storage con **Row Level Security** su tutte le tabelle.
+- **DB condiviso**: progetto Supabase **"bussola"** (`bxmatbhaxkdsuzcojesj`), ma T-Stack vive in uno
+  **schema dedicato `tstack`** per non collidere con l'app già presente. I client Supabase impostano
+  `db: { schema: 'tstack' }`; le query `.from('...')` restano invariate. Bucket storage: `tstack-attachments`.
 - Niente font Google a build-time (si usano font di sistema) per evitare dipendenze di rete.
 
 ## Comandi
@@ -34,7 +37,7 @@ node scripts/gen-icons.mjs   # rigenera le icone PWA
 - `app/(app)/` — area autenticata (layout con bottom-nav); `actions.ts` = mutazioni condivise
 - `app/api/reminders/` — cron promemoria (usa `SUPABASE_SERVICE_ROLE_KEY`, protetto da `CRON_SECRET`)
 - `lib/supabase/` — `client` (browser), `server` (SSR), `proxy` (sessione/route guard)
-- `supabase/migrations/0001_init.sql` — **fonte di verità** dello schema + RLS + viste bilancio
+- `supabase/migrations/0001_tstack_init.sql` — **fonte di verità** dello schema `tstack` + RLS + viste bilancio + grant/esposizione schema
 - `components/` — `bottom-nav`, `ui` (Card/Badge/…), `attachments-panel`, `sign-out-button`
 
 ## Sicurezza

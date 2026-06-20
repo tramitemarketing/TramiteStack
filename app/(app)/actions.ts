@@ -54,7 +54,29 @@ export async function deleteProject(formData: FormData) {
   const supabase = await createClient()
   await supabase.from('projects').delete().eq('id', String(formData.get('id')))
   revalidatePath('/projects')
+  revalidatePath('/calendar')
   redirect('/projects')
+}
+
+// Modifica completa di un progetto
+export async function updateProject(formData: FormData) {
+  const supabase = await createClient()
+  const id = String(formData.get('id'))
+  const name = String(formData.get('name') ?? '').trim()
+  if (!id || !name) return
+  await supabase
+    .from('projects')
+    .update({
+      name,
+      description: String(formData.get('description') ?? '') || null,
+      status: String(formData.get('status') ?? 'attivo') as ProjectStatus,
+      priority_level: clampPriority(formData.get('priority_level')),
+      due_date: String(formData.get('due_date') ?? '') || null,
+    })
+    .eq('id', id)
+  revalidatePath('/projects')
+  revalidatePath(`/projects/${id}`)
+  revalidatePath('/calendar')
 }
 
 // ---- Task ----
@@ -111,6 +133,28 @@ export async function deleteTask(formData: FormData) {
   const id = String(formData.get('id'))
   await supabase.from('tasks').delete().eq('id', id)
   revalidatePath('/tasks')
+  revalidatePath('/calendar')
+  const projectId = String(formData.get('project_id') ?? '')
+  if (projectId) revalidatePath(`/projects/${projectId}`)
+}
+
+// Modifica completa di una task
+export async function updateTask(formData: FormData) {
+  const supabase = await createClient()
+  const id = String(formData.get('id'))
+  const title = String(formData.get('title') ?? '').trim()
+  if (!id || !title) return
+  await supabase
+    .from('tasks')
+    .update({
+      title,
+      priority_level: clampPriority(formData.get('priority_level')),
+      due_date: String(formData.get('due_date') ?? '') || null,
+      assignee_id: String(formData.get('assignee_id') ?? '') || null,
+    })
+    .eq('id', id)
+  revalidatePath('/tasks')
+  revalidatePath('/calendar')
   const projectId = String(formData.get('project_id') ?? '')
   if (projectId) revalidatePath(`/projects/${projectId}`)
 }

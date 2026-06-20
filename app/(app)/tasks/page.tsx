@@ -45,7 +45,7 @@ export default async function TasksPage() {
       ) : tasks.length === 0 ? (
         <EmptyState title="Nessun task" hint="Tocca “Crea Task” per iniziare." />
       ) : (
-        <TaskBoard initialTasks={tasks} meId={me.id} />
+        <TaskBoard initialTasks={tasks} meId={me.id} members={memberList} />
       )}
     </div>
   )

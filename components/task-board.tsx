@@ -25,11 +25,14 @@ import {
   type TaskStatus,
 } from '@/types/database'
 import { PriorityPips, Avatar } from '@/components/ui'
+import { EditTask } from '@/components/edit-task'
 
 export type BoardTask = Task & {
   projectName: string | null
   assigneeName: string | null
 }
+
+type Member = { id: string; username: string | null }
 
 const COLUMN_BAR: Record<TaskStatus, string> = {
   da_fare: 'bg-slate-400',
@@ -74,11 +77,13 @@ function AssigneeControl({ task, meId }: { task: BoardTask; meId: string }) {
 function TaskCard({
   task,
   meId,
+  members,
   pending,
   overlay = false,
 }: {
   task: BoardTask
   meId: string
+  members: Member[]
   pending?: boolean
   overlay?: boolean
 }) {
@@ -101,15 +106,18 @@ function TaskCard({
           {pending ? (
             <span className="spinner shrink-0" />
           ) : !overlay ? (
-            <form action={deleteTask} onPointerDown={stop}>
-              <input type="hidden" name="id" value={task.id} />
-              <input type="hidden" name="project_id" value={task.project_id} />
-              <button type="submit" className="shrink-0 text-slate-300 opacity-0 transition group-hover:opacity-100 hover:text-red-500" aria-label="Elimina task">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                  <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-                </svg>
-              </button>
-            </form>
+            <div className="flex shrink-0 items-center">
+              <EditTask task={task} members={members} />
+              <form action={deleteTask} onPointerDown={stop}>
+                <input type="hidden" name="id" value={task.id} />
+                <input type="hidden" name="project_id" value={task.project_id} />
+                <button type="submit" className="press p-1 text-slate-300 transition hover:text-red-500" aria-label="Elimina task">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                    <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
+                  </svg>
+                </button>
+              </form>
+            </div>
           ) : null}
         </div>
         {task.projectName && (
@@ -135,11 +143,13 @@ function Column({
   status,
   tasks,
   meId,
+  members,
   pendingId,
 }: {
   status: TaskStatus
   tasks: BoardTask[]
   meId: string
+  members: Member[]
   pendingId: string | null
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
@@ -160,7 +170,7 @@ function Column({
         )}
       >
         {tasks.map((t) => (
-          <TaskCard key={t.id} task={t} meId={meId} pending={pendingId === t.id} />
+          <TaskCard key={t.id} task={t} meId={meId} members={members} pending={pendingId === t.id} />
         ))}
         {tasks.length === 0 && <p className="py-6 text-center text-xs text-slate-300">trascina qui</p>}
       </div>
@@ -168,7 +178,15 @@ function Column({
   )
 }
 
-export function TaskBoard({ initialTasks, meId }: { initialTasks: BoardTask[]; meId: string }) {
+export function TaskBoard({
+  initialTasks,
+  meId,
+  members,
+}: {
+  initialTasks: BoardTask[]
+  meId: string
+  members: Member[]
+}) {
   const [tasks, setTasks] = useState<BoardTask[]>(initialTasks)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -219,13 +237,14 @@ export function TaskBoard({ initialTasks, meId }: { initialTasks: BoardTask[]; m
               key={status}
               status={status}
               meId={meId}
+              members={members}
               pendingId={pendingId}
               tasks={tasks.filter((t) => t.status === status).sort((a, b) => a.position - b.position)}
             />
           ))}
         </motion.div>
       </div>
-      <DragOverlay>{active ? <TaskCard task={active} meId={meId} overlay /> : null}</DragOverlay>
+      <DragOverlay>{active ? <TaskCard task={active} meId={meId} members={members} overlay /> : null}</DragOverlay>
     </DndContext>
   )
 }

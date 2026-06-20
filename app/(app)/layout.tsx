@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { BottomNav } from '@/components/bottom-nav'
 import { SignOutButton } from '@/components/sign-out-button'
 import { LogoWordmark } from '@/components/logo'
+import { InstallPrompt } from '@/components/install-prompt'
 import { requireProfile } from '@/lib/auth'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <main className="with-bottom-nav mx-auto w-full max-w-2xl flex-1 px-4 py-4">{children}</main>
 
+      <InstallPrompt />
       <BottomNav />
     </div>
   )

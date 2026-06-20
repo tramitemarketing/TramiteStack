@@ -15,6 +15,8 @@ import { setProjectStatus, deleteProject } from '@/app/(app)/actions'
 import { CreateTaskButton } from '@/components/create-task'
 import { AttachmentsPanel } from '@/components/attachments-panel'
 import { SubmitSpinner } from '@/components/loading-overlay'
+import { EditProject } from '@/components/edit-project'
+import { EditTask } from '@/components/edit-task'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +46,15 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-5">
-      <PageHeader title={p.name} action={<ProjectStatusBadge status={p.status} />} />
+      <PageHeader
+        title={p.name}
+        action={
+          <div className="flex items-center gap-1">
+            <ProjectStatusBadge status={p.status} />
+            <EditProject project={p} />
+          </div>
+        }
+      />
       <div className="flex items-center gap-3">
         <PriorityPips level={p.priority_level} />
         {p.due_date && <span className="text-xs text-slate-400">scadenza {formatDate(p.due_date)}</span>}
@@ -89,7 +99,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               <Card key={t.id} className="p-3">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold">{t.title}</p>
-                  <TaskStatusBadge status={t.status} />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <TaskStatusBadge status={t.status} />
+                    <EditTask task={t} members={memberList} />
+                  </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <PriorityPips level={t.priority_level} />

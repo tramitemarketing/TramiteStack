@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PageHeader, Card } from '@/components/ui'
 import { CalendarView, type CalItem } from '@/components/calendar-view'
 import { SubmitSpinner } from '@/components/loading-overlay'
+import { AutoScrollDetails } from '@/components/auto-scroll-details'
 import { createEvent } from '@/app/(app)/actions'
 import type { CalendarEvent, Task, Project } from '@/types/database'
 
@@ -21,7 +22,7 @@ export default async function CalendarPage({
 
   const base = addMonths(new Date(), off)
   const rangeStart = startOfWeek(startOfMonth(base), { weekStartsOn: 1 })
-  const rangeEnd = endOfWeek(endOfMonth(addMonths(base, 1)), { weekStartsOn: 1 })
+  const rangeEnd = endOfWeek(endOfMonth(base), { weekStartsOn: 1 })
   const sIso = rangeStart.toISOString()
   const eIso = rangeEnd.toISOString()
   const sDay = format(rangeStart, 'yyyy-MM-dd')
@@ -37,13 +38,13 @@ export default async function CalendarPage({
 
   const items: CalItem[] = [
     ...((events as Pick<CalendarEvent, 'id' | 'title' | 'starts_at'>[] | null) ?? []).map((e) => ({
-      id: 'e' + e.id, date: e.starts_at.slice(0, 10), title: e.title, kind: 'evento' as const,
+      key: 'e' + e.id, eventId: e.id, date: e.starts_at.slice(0, 10), title: e.title, kind: 'evento' as const,
     })),
     ...((tasks as Pick<Task, 'id' | 'title' | 'due_date'>[] | null) ?? []).map((t) => ({
-      id: 't' + t.id, date: t.due_date as string, title: 'Task: ' + t.title, kind: 'task' as const,
+      key: 't' + t.id, date: t.due_date as string, title: 'Task: ' + t.title, kind: 'task' as const,
     })),
     ...((projects as Pick<Project, 'id' | 'name' | 'due_date'>[] | null) ?? []).map((p) => ({
-      id: 'p' + p.id, date: p.due_date as string, title: 'Consegna: ' + p.name, kind: 'progetto' as const,
+      key: 'p' + p.id, date: p.due_date as string, title: 'Consegna: ' + p.name, kind: 'progetto' as const,
     })),
   ]
 
@@ -55,10 +56,7 @@ export default async function CalendarPage({
 
       <CalendarView items={items} off={off} />
 
-      <details>
-        <summary className="cursor-pointer text-sm font-semibold text-brand" style={{ color: 'var(--brand)' }}>
-          + Nuovo evento
-        </summary>
+      <AutoScrollDetails summary="+ Nuovo evento">
         <Card className="mt-2">
           <form action={createEvent} className="space-y-3">
             <SubmitSpinner />
@@ -76,7 +74,7 @@ export default async function CalendarPage({
             </button>
           </form>
         </Card>
-      </details>
+      </AutoScrollDetails>
     </div>
   )
 }

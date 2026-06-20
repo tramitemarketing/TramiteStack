@@ -1,15 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
-import { Card, PageHeader, EmptyState, Avatar } from '@/components/ui'
-import { formatEuro, formatDate } from '@/lib/utils'
+import { Card, EmptyState, Avatar } from '@/components/ui'
+import { AutoScrollDetails } from '@/components/auto-scroll-details'
+import { SubmitButton, SubmitIcon } from '@/components/submit-button'
+import { IconUp, IconDown, IconTrash } from '@/components/icons'
+import { EmptyBudget } from '@/components/illustrations'
+import { formatEuro, formatDate, cn } from '@/lib/utils'
 import { createTransaction, deleteTransaction } from '@/app/(app)/actions'
-import { SubmitSpinner } from '@/components/loading-overlay'
 import type { Transaction, TeamBalance, Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 const inputCls =
-  'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
+  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 type TxRow = Transaction & { owner: { username: string | null } | null }
 
@@ -34,7 +37,15 @@ export default async function BudgetPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Bilancio" subtitle="Saldo personale di ogni dipendente" />
+      {/* Header navy con saldo totale team */}
+      <div className="rounded-2xl p-[18px] text-white" style={{ background: 'linear-gradient(150deg, #1660A3, #0A2E4D)' }}>
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-[22px] font-extrabold tracking-tight">Bilancio</h1>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-[#9DC2EC]">Team</span>
+        </div>
+        <p className="mt-3 text-[11px] font-semibold text-[#9DC2EC]">Saldo totale team</p>
+        <p className="font-display text-3xl font-extrabold tnum text-accent">{formatEuro(totale)}</p>
+      </div>
 
       {/* Saldi per dipendente */}
       <div className="grid grid-cols-2 gap-3">
@@ -44,13 +55,13 @@ export default async function BudgetPage() {
           team.map((t) => (
             <Card key={t.user_id} className="p-3">
               <div className="flex items-center gap-2">
-                <Avatar name={t.username} />
-                <p className="truncate text-sm font-semibold">{t.username || 'Utente'}</p>
+                <Avatar name={t.username} size={24} />
+                <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.username || 'Utente'}</p>
               </div>
-              <p className={'mt-2 text-xl font-extrabold ' + (Number(t.balance) >= 0 ? 'text-slate-900' : 'text-red-600')}>
+              <p className={cn('mt-2 font-display text-lg font-extrabold tnum', Number(t.balance) >= 0 ? 'text-ok' : 'text-danger')}>
                 {formatEuro(Number(t.balance))}
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] font-semibold text-[#9CA5B3]">
                 +{formatEuro(Number(t.total_income))} · −{formatEuro(Number(t.total_expense))}
               </p>
             </Card>
@@ -58,20 +69,10 @@ export default async function BudgetPage() {
         )}
       </div>
 
-      {team.length > 0 && (
-        <p className="text-center text-sm text-slate-500">
-          Totale team: <span className="font-bold text-slate-700">{formatEuro(totale)}</span>
-        </p>
-      )}
-
-      {/* Aggiungi movimento per persona */}
-      <details>
-        <summary className="cursor-pointer text-sm font-semibold text-brand" style={{ color: 'var(--brand)' }}>
-          + Aggiungi entrata / uscita
-        </summary>
+      {/* Aggiungi movimento */}
+      <AutoScrollDetails summary="+ Aggiungi entrata / uscita">
         <Card className="mt-2">
           <form action={createTransaction} className="space-y-3">
-            <SubmitSpinner />
             <select name="owner_id" required className={inputCls} defaultValue={me.id}>
               {memberList.map((m) => (
                 <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
@@ -89,42 +90,45 @@ export default async function BudgetPage() {
               <input name="category" className={inputCls} placeholder="Categoria" />
               <input type="date" name="occurred_on" className={inputCls} defaultValue={new Date().toISOString().slice(0, 10)} />
             </div>
-            <button className="press w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--brand)' }}>
+            <SubmitButton pendingLabel="Registrazione…" className="w-full rounded-[10px] px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
               Registra movimento
-            </button>
+            </SubmitButton>
           </form>
         </Card>
-      </details>
+      </AutoScrollDetails>
 
       {/* Ultimi movimenti */}
       <section>
-        <h2 className="mb-2 font-bold">Ultimi movimenti</h2>
+        <h2 className="mb-2 font-display font-bold text-[#1A1F2B]">Ultimi movimenti</h2>
         {txRows.length === 0 ? (
-          <EmptyState title="Nessun movimento" />
+          <EmptyState title="Nessun movimento" hint="Registra entrate e uscite." illustration={<EmptyBudget />} />
         ) : (
           <div className="space-y-1.5">
-            {txRows.map((t) => (
-              <div key={t.id} className="group flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{t.description || t.category || 'Movimento'}</p>
-                  <p className="text-xs text-slate-400">{t.owner?.username ?? '—'} · {formatDate(t.occurred_on)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={t.type === 'entrata' ? 'font-bold text-emerald-600' : 'font-bold text-red-600'}>
-                    {t.type === 'entrata' ? '+' : '−'} {formatEuro(Number(t.amount))}
+            {txRows.map((t) => {
+              const entrata = t.type === 'entrata'
+              return (
+                <div key={t.id} className="group flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-[#E0E4EB]">
+                  <span
+                    className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px]', entrata ? 'bg-[#E6F3EC] text-ok' : 'bg-[#FBEAE6] text-danger')}
+                  >
+                    {entrata ? <IconUp size={16} strokeWidth={2.4} /> : <IconDown size={16} strokeWidth={2.4} />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.description || t.category || 'Movimento'}</p>
+                    <p className="text-[11px] font-semibold text-[#9CA5B3]">{t.owner?.username ?? '—'} · {formatDate(t.occurred_on, 'd MMM')}</p>
+                  </div>
+                  <span className={cn('font-display text-sm font-extrabold tnum', entrata ? 'text-ok' : 'text-danger')}>
+                    {entrata ? '+' : '−'} {formatEuro(Number(t.amount))}
                   </span>
                   <form action={deleteTransaction}>
-                    <SubmitSpinner />
                     <input type="hidden" name="id" value={t.id} />
-                    <button className="text-slate-300 opacity-0 transition group-hover:opacity-100 hover:text-red-500" aria-label="Elimina">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                        <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-                      </svg>
-                    </button>
+                    <SubmitIcon label="Elimina movimento" className="p-1 text-[#C4CBD6] opacity-0 transition group-hover:opacity-100 hover:text-danger">
+                      <IconTrash size={16} />
+                    </SubmitIcon>
                   </form>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>

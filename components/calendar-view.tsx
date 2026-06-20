@@ -10,7 +10,9 @@ import { it } from 'date-fns/locale'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { deleteEvent } from '@/app/(app)/actions'
-import { SubmitSpinner } from '@/components/loading-overlay'
+import { SubmitIcon } from '@/components/submit-button'
+import { IconChevronLeft, IconChevronRight, IconTrash } from '@/components/icons'
+import { EmptyCalendar } from '@/components/illustrations'
 
 export type CalItem = {
   key: string
@@ -20,10 +22,15 @@ export type CalItem = {
   eventId?: string
 }
 
-const KIND_DOT: Record<CalItem['kind'], string> = {
-  evento: 'bg-violet-500',
-  task: 'bg-amber-500',
-  progetto: 'bg-cyan-500',
+const KIND_COLOR: Record<CalItem['kind'], string> = {
+  evento: '#7C5CD6',
+  task: '#E5A93A',
+  progetto: '#2A78C2',
+}
+const KIND_LABEL: Record<CalItem['kind'], string> = {
+  evento: 'Evento',
+  task: 'Scadenza task',
+  progetto: 'Consegna progetto',
 }
 
 export function CalendarView({ items, off }: { items: CalItem[]; off: number }) {
@@ -38,37 +45,47 @@ export function CalendarView({ items, off }: { items: CalItem[]; off: number }) 
 
   return (
     <div className="space-y-4">
+      {/* Header mese */}
       <div className="flex items-center justify-between">
-        <button onClick={() => router.push(`/calendar?off=${off - 1}`)} className="press rounded-lg bg-white px-3 py-1.5 text-lg font-bold ring-1 ring-slate-200">←</button>
-        <p className="text-base font-bold capitalize">{format(month, 'MMMM yyyy', { locale: it })}</p>
-        <button onClick={() => router.push(`/calendar?off=${off + 1}`)} className="press rounded-lg bg-white px-3 py-1.5 text-lg font-bold ring-1 ring-slate-200">→</button>
+        <button onClick={() => router.push(`/calendar?off=${off - 1}`)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese precedente">
+          <IconChevronLeft size={18} />
+        </button>
+        <div className="text-center">
+          <p className="font-display text-lg font-extrabold capitalize text-navy">{format(month, 'MMMM yyyy', { locale: it })}</p>
+          <button onClick={() => router.push('/calendar?off=0')} className="press text-[11px] font-bold text-brand">Oggi</button>
+        </div>
+        <button onClick={() => router.push(`/calendar?off=${off + 1}`)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese successivo">
+          <IconChevronRight size={18} />
+        </button>
       </div>
 
-      <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-400">
-          {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((d) => <div key={d}>{d}</div>)}
+      {/* Griglia mese */}
+      <div className="rounded-2xl bg-white p-3 ring-1 ring-[#E0E4EB]">
+        <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#9CA5B3]">
+          {['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((d, i) => <div key={i}>{d}</div>)}
         </div>
-        <div className="mt-1 grid grid-cols-7 gap-1">
+        <div className="mt-1 grid grid-cols-7 gap-0.5">
           {days.map((d) => {
             const key = format(d, 'yyyy-MM-dd')
             const dayItems = items.filter((it) => it.date === key)
             const isSel = selected === key
+            const out = !isSameMonth(d, month)
             return (
               <button
                 key={key}
                 onClick={() => setSelected(key)}
                 className={cn(
-                  'press flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition',
-                  isSameMonth(d, month) ? 'text-slate-700' : 'text-slate-300',
-                  isToday(d) && !isSel && 'font-bold text-brand',
-                  isSel && 'font-bold text-white',
+                  'press flex aspect-square flex-col items-center justify-center rounded-[9px] text-[13px] font-semibold transition',
+                  out ? 'text-[#C4CBD6]' : 'text-[#3E4757]',
+                  isToday(d) && !isSel && 'text-brand font-extrabold',
+                  isSel && 'font-extrabold text-white',
                 )}
                 style={isSel ? { backgroundColor: 'var(--brand)' } : undefined}
               >
                 {format(d, 'd')}
-                <span className="mt-0.5 flex h-1.5 gap-0.5">
+                <span className="mt-0.5 flex h-1 gap-0.5">
                   {dayItems.slice(0, 3).map((it) => (
-                    <span key={it.key} className={cn('h-1.5 w-1.5 rounded-full', isSel ? 'bg-white' : KIND_DOT[it.kind])} />
+                    <span key={it.key} className="h-1 w-1 rounded-full" style={{ background: isSel ? '#fff' : KIND_COLOR[it.kind] }} />
                   ))}
                 </span>
               </button>
@@ -77,29 +94,28 @@ export function CalendarView({ items, off }: { items: CalItem[]; off: number }) 
         </div>
       </div>
 
-      {/* Dettaglio del giorno selezionato */}
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-        <p className="mb-2 text-sm font-bold capitalize">
+      {/* Dettaglio giorno */}
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white p-4 ring-1 ring-[#E0E4EB]">
+        <p className="mb-2.5 font-display text-sm font-bold capitalize text-[#1A1F2B]">
           {selected ? format(new Date(selected), 'EEEE d MMMM', { locale: it }) : 'Seleziona un giorno'}
         </p>
         {selectedItems.length === 0 ? (
-          <p className="text-sm text-slate-400">Niente in programma.</p>
+          <EmptyState />
         ) : (
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {selectedItems.map((it) => (
-              <li key={it.key} className="flex items-center gap-2 text-sm">
-                <span className={cn('h-2 w-2 shrink-0 rounded-full', KIND_DOT[it.kind])} />
-                <span className="truncate">{it.title}</span>
-                <span className="ml-auto text-[11px] capitalize text-slate-400">{it.kind}</span>
+              <li key={it.key} className="flex items-center gap-3 rounded-[10px] border border-[#E0E4EB] p-2.5">
+                <span className="h-7 w-1 shrink-0 rounded-full" style={{ background: KIND_COLOR[it.kind] }} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-bold text-[#1A1F2B]">{it.title}</p>
+                  <p className="text-[11px] font-semibold text-[#9CA5B3]">{KIND_LABEL[it.kind]}</p>
+                </div>
                 {it.eventId && (
                   <form action={deleteEvent}>
-                    <SubmitSpinner />
                     <input type="hidden" name="id" value={it.eventId} />
-                    <button className="press p-1 text-slate-300 hover:text-red-500" aria-label="Elimina evento">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                        <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-                      </svg>
-                    </button>
+                    <SubmitIcon label="Elimina evento" className="p-1 text-[#C4CBD6] hover:text-danger">
+                      <IconTrash size={16} />
+                    </SubmitIcon>
                   </form>
                 )}
               </li>
@@ -107,6 +123,15 @@ export function CalendarView({ items, off }: { items: CalItem[]; off: number }) 
           </ul>
         )}
       </motion.div>
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center gap-2 py-3 text-center">
+      <EmptyCalendar />
+      <p className="text-sm font-semibold text-[#9CA5B3]">Niente in programma.</p>
     </div>
   )
 }

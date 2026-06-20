@@ -59,9 +59,9 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
 
   return (
     <section>
-      <h2 className="mb-2 font-semibold">Allegati</h2>
+      <h2 className="mb-2 font-display font-bold text-[#1A1F2B]">Allegati</h2>
       <Card className="space-y-3">
-        <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-indigo-600">
+        <label className="flex cursor-pointer items-center justify-center rounded-[10px] border border-dashed border-[#C4CBD6] px-4 py-3 text-sm font-bold text-brand">
           {uploading ? 'Caricamento…' : '+ Carica file'}
           <input type="file" className="hidden" onChange={onUpload} disabled={uploading} />
         </label>
@@ -77,7 +77,7 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
                   className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-slate-50"
                 >
                   <span className="truncate">{f.file_name}</span>
-                  <span className="text-xs text-indigo-600">Scarica</span>
+                  <span className="text-xs font-bold text-brand">Scarica</span>
                 </button>
               </li>
             ))}

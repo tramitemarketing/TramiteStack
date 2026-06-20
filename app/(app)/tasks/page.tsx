@@ -3,6 +3,7 @@ import { requireProfile } from '@/lib/auth'
 import { PageHeader, EmptyState } from '@/components/ui'
 import { TaskBoard, type BoardTask } from '@/components/task-board'
 import { CreateTaskButton } from '@/components/create-task'
+import { EmptyTasks, EmptyProjects } from '@/components/illustrations'
 import type { Task, Project, Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -41,9 +42,9 @@ export default async function TasksPage() {
         action={<CreateTaskButton projects={projList} members={memberList} />}
       />
       {projList.length === 0 ? (
-        <EmptyState title="Nessun progetto" hint="Crea prima un progetto, poi i task." />
+        <EmptyState title="Nessun progetto" hint="Crea prima un progetto, poi i task." illustration={<EmptyProjects />} />
       ) : tasks.length === 0 ? (
-        <EmptyState title="Nessun task" hint="Tocca “Crea Task” per iniziare." />
+        <EmptyState title="Nessun task" hint="Tocca “Nuovo” per iniziare." illustration={<EmptyTasks />} />
       ) : (
         <TaskBoard initialTasks={tasks} meId={me.id} members={memberList} />
       )}

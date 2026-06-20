@@ -1,15 +1,13 @@
-import { HeaderSkeleton } from '@/components/skeletons'
-import { CenterSpinner } from '@/components/loading-overlay'
-
 export default function Loading() {
   return (
     <div className="space-y-4">
-      <HeaderSkeleton />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="skeleton h-72 w-full" />
-        <div className="skeleton h-72 w-full" />
+      <div className="flex items-center justify-between">
+        <div className="skeleton h-9 w-9" />
+        <div className="skeleton h-6 w-32" />
+        <div className="skeleton h-9 w-9" />
       </div>
-      <CenterSpinner />
+      <div className="skeleton h-72 w-full" />
+      <div className="skeleton h-40 w-full" />
     </div>
   )
 }

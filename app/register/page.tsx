@@ -7,7 +7,7 @@ import { LogoMark } from '@/components/logo'
 
 const initialState: { error?: string } = {}
 const inputCls =
-  'w-full rounded-xl border border-slate-300 px-3.5 py-3 text-base outline-none transition focus:border-brand focus:ring-2 focus:ring-violet-200'
+  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-3 text-base outline-none transition focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(signUp, initialState)
@@ -16,9 +16,9 @@ export default function RegisterPage() {
     <main className="flex flex-1 items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <LogoMark size={56} />
-          <h1 className="mt-3 text-2xl font-extrabold tracking-tight">Crea il tuo account</h1>
-          <p className="mt-1 text-sm text-slate-500">Riservato ai collaboratori di TramiteMarketing</p>
+          <LogoMark size={64} boxed />
+          <h1 className="font-display mt-3 text-2xl font-extrabold tracking-tight text-navy">Crea il tuo account</h1>
+          <p className="mt-1 text-sm font-medium text-[#5A6473]">Riservato ai collaboratori di TramiteMarketing</p>
         </div>
 
         <form action={formAction} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">

@@ -5,11 +5,11 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { updateTask } from '@/app/(app)/actions'
-import { CenterSpinner } from '@/components/loading-overlay'
+import { IconDots } from '@/components/icons'
 import type { Task } from '@/types/database'
 
 const inputCls =
-  'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
+  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export function EditTask({
   task,
@@ -52,7 +52,7 @@ export function EditTask({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-bold">Modifica task</h2>
+              <h2 className="font-display text-lg font-bold text-navy">Modifica task</h2>
               <button onClick={() => setOpen(false)} className="text-slate-400">✕</button>
             </div>
             <form onSubmit={onSubmit} className="space-y-3">
@@ -81,17 +81,14 @@ export function EditTask({
 
   return (
     <>
-      {pending && <CenterSpinner />}
       <button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen(true)}
-        className="press shrink-0 rounded-md p-1 text-slate-400 hover:text-slate-700"
+        className="press shrink-0 rounded-md p-1 text-[#C4CBD6] hover:text-[#3E4757]"
         aria-label="Modifica task"
       >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" />
-        </svg>
+        <IconDots size={16} />
       </button>
 
       {mounted ? createPortal(modal, document.body) : null}

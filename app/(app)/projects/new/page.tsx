@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { createProject } from '@/app/(app)/actions'
 import { Card, PageHeader } from '@/components/ui'
-import { SubmitSpinner } from '@/components/loading-overlay'
+import { SubmitButton } from '@/components/submit-button'
 import { PROJECT_STATUS_LABEL } from '@/types/database'
 
 const inputCls =
-  'w-full rounded-xl border border-slate-300 px-3.5 py-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
+  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export default function NewProjectPage() {
   return (
@@ -13,7 +13,6 @@ export default function NewProjectPage() {
       <PageHeader title="Nuovo progetto" />
       <Card>
         <form action={createProject} className="space-y-4">
-          <SubmitSpinner />
           <div>
             <label className="mb-1 block text-sm font-semibold">Titolo *</label>
             <input name="name" required className={inputCls} placeholder="Es. Social media estate" />
@@ -45,10 +44,10 @@ export default function NewProjectPage() {
             <input type="date" name="due_date" className={inputCls} />
           </div>
           <div className="flex gap-2 pt-2">
-            <button className="press flex-1 rounded-xl px-4 py-3 font-semibold text-white" style={{ backgroundColor: 'var(--brand)' }}>
+            <SubmitButton pendingLabel="Creazione…" className="flex-1 rounded-[10px] px-4 py-3 font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
               Crea progetto
-            </button>
-            <Link href="/projects" className="rounded-xl px-4 py-3 font-semibold text-slate-500 ring-1 ring-slate-300">
+            </SubmitButton>
+            <Link href="/projects" className="rounded-[10px] px-4 py-3 font-bold text-[#5A6473] ring-1 ring-[#E0E4EB]">
               Annulla
             </Link>
           </div>

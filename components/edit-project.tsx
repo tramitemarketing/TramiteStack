@@ -5,11 +5,11 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { updateProject } from '@/app/(app)/actions'
-import { CenterSpinner } from '@/components/loading-overlay'
+import { IconDots } from '@/components/icons'
 import { PROJECT_STATUS_LABEL, type Project } from '@/types/database'
 
 const inputCls =
-  'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
+  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export function EditProject({
   project,
@@ -49,7 +49,7 @@ export function EditProject({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-bold">Modifica progetto</h2>
+              <h2 className="font-display text-lg font-bold text-navy">Modifica progetto</h2>
               <button onClick={() => setOpen(false)} className="text-slate-400">✕</button>
             </div>
             <form onSubmit={onSubmit} className="space-y-3">
@@ -80,16 +80,13 @@ export function EditProject({
 
   return (
     <>
-      {pending && <CenterSpinner />}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="press rounded-md p-1.5 text-slate-400 hover:text-slate-700"
+        className="press flex h-9 w-9 items-center justify-center rounded-[10px] text-[#3E4757] hover:bg-[#EFF1F5]"
         aria-label="Modifica progetto"
       >
-        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" />
-        </svg>
+        <IconDots size={20} />
       </button>
 
       {mounted ? createPortal(modal, document.body) : null}

@@ -1,9 +1,12 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
-import { Card, PageHeader, TaskStatusBadge, PriorityPips, EmptyState } from '@/components/ui'
-import { formatEuro } from '@/lib/utils'
-import type { Task, TeamBalance } from '@/types/database'
+import { Card, TaskStatusBadge, EmptyState } from '@/components/ui'
+import { HeaderAccount } from '@/components/header-account'
+import { IconEuro } from '@/components/icons'
+import { EmptyTasks } from '@/components/illustrations'
+import { formatEuro, formatDate, cn } from '@/lib/utils'
+import { priorityColor, type Task, type TeamBalance } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +23,9 @@ export default async function DashboardPage() {
       .from('tasks')
       .select('*, projects(name)')
       .eq('due_date', today)
+      .eq('assignee_id', profile.id)
       .neq('status', 'completato')
-      .order('priority_level', { ascending: false }),
+      .order('priority_level', { ascending: true }),
   ])
 
   const myBalance = (balance as TeamBalance | null)?.balance ?? 0
@@ -29,41 +33,62 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={`Ciao ${profile.username || ''} 👋`} subtitle="La tua giornata" />
+      {/* Header: data + saluto + account */}
+      <header className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold capitalize text-[#9CA5B3]">{formatDate(today, 'EEEE d MMMM')}</p>
+          <h1 className="font-display text-[23px] font-extrabold tracking-tight text-navy">
+            Ciao {profile.username || ''} 👋
+          </h1>
+        </div>
+        <HeaderAccount username={profile.username} />
+      </header>
 
-      {/* Bilancio personale: solo saldo attuale */}
-      <Card className="bg-gradient-to-br from-violet-600 to-cyan-500 text-white ring-0">
-        <p className="text-sm/5 opacity-90">Il tuo saldo personale</p>
-        <p className="mt-1 text-3xl font-extrabold tracking-tight">{formatEuro(Number(myBalance))}</p>
-        <Link href="/budget" className="mt-2 inline-block text-sm font-semibold underline opacity-90">
-          Vai al bilancio
-        </Link>
-      </Card>
+      {/* Saldo personale (pannello navy) */}
+      <Link href="/budget" className="press block">
+        <div className="rounded-2xl p-[18px] text-white" style={{ background: 'linear-gradient(150deg, #1660A3, #0A2E4D)' }}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold tracking-wide text-[#9DC2EC]">SALDO PERSONALE</span>
+            <IconEuro size={18} className="text-[#9DC2EC]" />
+          </div>
+          <div className="mt-1.5 font-display text-3xl font-extrabold tnum">{formatEuro(Number(myBalance))}</div>
+          <div className="mt-3.5 text-right text-xs font-bold text-accent">Bilancio →</div>
+        </div>
+      </Link>
 
-      {/* Task da fare con scadenza odierna */}
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-bold">Task di oggi</h2>
-          <Link href="/tasks" className="text-sm font-semibold text-brand" style={{ color: 'var(--brand)' }}>
-            Tutti i task
-          </Link>
+      {/* Task di oggi (assegnate a me) */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-base font-bold text-[#1A1F2B]">Task di oggi</h2>
+          {tasks.length > 0 && (
+            <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-bold text-brand">
+              {tasks.length} {tasks.length === 1 ? 'attiva' : 'attive'}
+            </span>
+          )}
         </div>
         {tasks.length === 0 ? (
-          <EmptyState title="Niente in scadenza oggi" hint="Goditi la giornata 🎉" />
+          <EmptyState
+            title="Niente in scadenza oggi 🎉"
+            hint="Goditi la giornata."
+            illustration={<EmptyTasks />}
+          />
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {tasks.map((t) => (
-              <Card key={t.id} className="flex items-center justify-between gap-3 p-3">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{t.title}</p>
-                  <p className="truncate text-xs text-slate-500">{t.projects?.name ?? 'Senza progetto'}</p>
-                  <div className="mt-1"><PriorityPips level={t.priority_level} /></div>
+              <Card key={t.id} className="flex items-center gap-3 p-3.5">
+                <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', priorityColor(t.priority_level))} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.title}</p>
+                  <p className="truncate text-[11px] font-semibold text-[#9CA5B3]">{t.projects?.name ?? 'Senza progetto'}</p>
                 </div>
                 <TaskStatusBadge status={t.status} />
               </Card>
             ))}
           </div>
         )}
+        <Link href="/tasks" className="block text-center text-sm font-bold text-brand">
+          Vai a tutte le task →
+        </Link>
       </section>
     </div>
   )

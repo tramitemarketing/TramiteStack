@@ -4,7 +4,7 @@ import {
   PROJECT_STATUS_LABEL,
   TASK_STATUS_LABEL,
   PRIORITY_LABEL,
-  priorityColor,
+  priorityBadge,
   type ProjectStatus,
   type TaskStatus,
 } from '@/types/database'
@@ -19,7 +19,7 @@ export function Card({
   children: React.ReactNode
 }) {
   return (
-    <div className={cn('rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70', className)} style={style}>
+    <div className={cn('rounded-xl bg-white p-4 ring-1 ring-[#E0E4EB] shadow-[0_1px_2px_rgba(16,40,80,0.04)]', className)} style={style}>
       {children}
     </div>
   )
@@ -37,19 +37,33 @@ export function PageHeader({
   return (
     <header className="mb-4 flex items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+        <h1 className="font-display text-[26px] font-extrabold leading-none tracking-tight text-navy">{title}</h1>
+        {subtitle && <p className="mt-1.5 text-sm font-medium text-[#5A6473]">{subtitle}</p>}
       </div>
       {action}
     </header>
   )
 }
 
-export function EmptyState({ title, hint }: { title: string; hint?: string }) {
+export function EmptyState({
+  title,
+  hint,
+  illustration,
+  action,
+}: {
+  title: string
+  hint?: string
+  illustration?: React.ReactNode
+  action?: React.ReactNode
+}) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white/50 p-8 text-center">
-      <p className="font-semibold text-slate-600">{title}</p>
-      {hint && <p className="mt-1 text-sm text-slate-400">{hint}</p>}
+    <div className="dot-grid flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C4CBD6] bg-[#F7F8FA] px-5 py-8 text-center">
+      {illustration}
+      <div>
+        <p className="font-display font-bold text-[#1A1F2B]">{title}</p>
+        {hint && <p className="mt-1 text-sm font-medium text-[#9CA5B3]">{hint}</p>}
+      </div>
+      {action}
     </div>
   )
 }
@@ -58,7 +72,7 @@ export function PrimaryLink({ href, children }: { href: string; children: React.
   return (
     <Link
       href={href}
-      className="press inline-flex items-center gap-1 rounded-xl bg-brand px-3.5 py-2 text-sm font-semibold text-white shadow-sm"
+      className="press inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2.5 text-sm font-bold text-white shadow-sm"
       style={{ backgroundColor: 'var(--brand)' }}
     >
       {children}
@@ -66,60 +80,91 @@ export function PrimaryLink({ href, children }: { href: string; children: React.
   )
 }
 
+// Bottone quadrato outline (azioni icona: filtra, cerca…)
+export function IconButton({
+  children,
+  onClick,
+  label,
+  className,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  label: string
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn('press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]', className)}
+    >
+      {children}
+    </button>
+  )
+}
+
 const PROJECT_STATUS_STYLE: Record<ProjectStatus, string> = {
-  attivo: 'bg-sky-100 text-sky-700',
-  in_corso: 'bg-amber-100 text-amber-700',
-  completato: 'bg-emerald-100 text-emerald-700',
-  sospeso: 'bg-slate-200 text-slate-600',
+  attivo: 'bg-[#EEF5FC] text-[#2A78C2]',
+  in_corso: 'bg-[#FDF4DD] text-[#C8932B]',
+  completato: 'bg-[#E6F3EC] text-[#1F8A5B]',
+  sospeso: 'bg-[#EFF1F5] text-[#5A6473]',
 }
 
 export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   return (
-    <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', PROJECT_STATUS_STYLE[status])}>
+    <span className={cn('rounded-md px-2.5 py-1 text-[11px] font-bold', PROJECT_STATUS_STYLE[status])}>
       {PROJECT_STATUS_LABEL[status]}
     </span>
   )
 }
 
 const TASK_STATUS_STYLE: Record<TaskStatus, string> = {
-  da_fare: 'bg-slate-200 text-slate-600',
-  in_corso: 'bg-amber-100 text-amber-700',
-  in_revisione: 'bg-violet-100 text-violet-700',
-  completato: 'bg-emerald-100 text-emerald-700',
+  da_fare: 'bg-[#EFF1F5] text-[#5A6473]',
+  in_corso: 'bg-[#FDF4DD] text-[#C8932B]',
+  in_revisione: 'bg-[#EFE8FB] text-[#7C5CD6]',
+  completato: 'bg-[#E6F3EC] text-[#1F8A5B]',
 }
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   return (
-    <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', TASK_STATUS_STYLE[status])}>
+    <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-bold', TASK_STATUS_STYLE[status])}>
       {TASK_STATUS_LABEL[status]}
     </span>
   )
 }
 
-// Indicatore priorità 1–5 (pallini colorati)
-export function PriorityPips({ level }: { level: number }) {
+// Badge priorità "P#" colorato
+export function PriorityBadge({ level }: { level: number }) {
   return (
-    <span className="inline-flex items-center gap-0.5" title={`Priorità: ${PRIORITY_LABEL[level] ?? level}`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span
-          key={i}
-          className={cn('h-1.5 w-1.5 rounded-full', i <= level ? priorityColor(level) : 'bg-slate-200')}
-        />
-      ))}
+    <span
+      className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-extrabold', priorityBadge(level))}
+      title={`Priorità: ${PRIORITY_LABEL[level] ?? level}`}
+    >
+      P{level}
     </span>
   )
 }
 
-export function Avatar({ name }: { name: string | null | undefined }) {
-  const initials = (name || '?')
+// Avatar a iniziali con colore deterministico dal nome
+const AVATAR_COLORS = ['#0F4C81', '#7C5CD6', '#1F8A5B', '#2A78C2', '#C8932B', '#D8553F']
+
+export function Avatar({ name, size = 24 }: { name: string | null | undefined; size?: number }) {
+  const label = name || '?'
+  const initials = label
     .split(' ')
     .map((w) => w[0])
     .slice(0, 2)
     .join('')
     .toUpperCase()
+  let hash = 0
+  for (let i = 0; i < label.length; i++) hash = (hash * 31 + label.charCodeAt(i)) >>> 0
+  const bg = AVATAR_COLORS[hash % AVATAR_COLORS.length]
   return (
-    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-[10px] font-bold text-brand"
-      style={{ backgroundColor: 'var(--brand-50)', color: 'var(--brand)' }}>
+    <span
+      className="flex items-center justify-center rounded-full font-bold text-white"
+      style={{ width: size, height: size, backgroundColor: bg, fontSize: size * 0.4 }}
+    >
       {initials}
     </span>
   )

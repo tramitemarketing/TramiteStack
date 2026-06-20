@@ -1,27 +1,26 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import {
   Card,
-  PageHeader,
   ProjectStatusBadge,
   TaskStatusBadge,
-  PriorityPips,
+  PriorityBadge,
   EmptyState,
   Avatar,
 } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
-import { PROJECT_STATUS_LABEL, type Project, type Task, type Profile } from '@/types/database'
-import { setProjectStatus, deleteProject } from '@/app/(app)/actions'
+import { type Project, type Task, type Profile } from '@/types/database'
+import { deleteProject } from '@/app/(app)/actions'
 import { CreateTaskButton } from '@/components/create-task'
 import { AttachmentsPanel } from '@/components/attachments-panel'
-import { SubmitSpinner } from '@/components/loading-overlay'
+import { SubmitButton } from '@/components/submit-button'
 import { EditProject } from '@/components/edit-project'
 import { EditTask } from '@/components/edit-task'
+import { EmptyTasks } from '@/components/illustrations'
+import { IconBack, IconTrash, IconClock } from '@/components/icons'
 
 export const dynamic = 'force-dynamic'
-
-const inputCls =
-  'rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm outline-none focus:border-brand'
 
 type TaskRow = Task & { assignee: { username: string | null } | null }
 
@@ -46,71 +45,66 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title={p.name}
-        action={
-          <div className="flex items-center gap-1">
-            <ProjectStatusBadge status={p.status} />
-            <EditProject project={p} />
-          </div>
-        }
-      />
-      <div className="flex items-center gap-3">
-        <PriorityPips level={p.priority_level} />
-        {p.due_date && <span className="text-xs text-slate-400">scadenza {formatDate(p.due_date)}</span>}
-      </div>
-      {p.description && <p className="text-sm text-slate-600">{p.description}</p>}
+      {/* Header dettaglio: indietro + titolo + ⋮ */}
+      <header className="flex items-center gap-2">
+        <Link href="/projects" className="press -ml-1 flex h-9 w-9 items-center justify-center rounded-[10px] text-[#3E4757] hover:bg-[#EFF1F5]" aria-label="Indietro">
+          <IconBack size={22} />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display truncate text-[19px] font-extrabold tracking-tight text-navy">{p.name}</h1>
+          <p className="text-[11px] font-semibold text-[#9CA5B3]">
+            {taskRows.length} task · {p.status.replace('_', ' ')}
+          </p>
+        </div>
+        <ProjectStatusBadge status={p.status} />
+        <EditProject project={p} />
+      </header>
 
-      {/* Stato + elimina */}
-      <Card className="flex items-center justify-between gap-3 p-3">
-        <form action={setProjectStatus} className="flex items-center gap-2">
-          <SubmitSpinner />
-          <input type="hidden" name="id" value={p.id} />
-          <select name="status" defaultValue={p.status} className={inputCls}>
-            {Object.entries(PROJECT_STATUS_LABEL).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-          <button className="press rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-semibold text-white">Aggiorna</button>
-        </form>
-        <form action={deleteProject}>
-          <SubmitSpinner />
-          <input type="hidden" name="id" value={p.id} />
-          <button className="press flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-red-600 ring-1 ring-red-200" aria-label="Elimina progetto">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-              <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" />
-            </svg>
-            Elimina
-          </button>
-        </form>
-      </Card>
+      {/* Meta */}
+      <div className="flex flex-wrap items-center gap-3">
+        <PriorityBadge level={p.priority_level} />
+        {p.due_date && (
+          <span className="flex items-center gap-1 text-xs font-semibold text-[#9CA5B3]">
+            <IconClock size={14} /> scadenza {formatDate(p.due_date, 'd MMM yyyy')}
+          </span>
+        )}
+      </div>
+      {p.description && <p className="text-sm font-medium text-[#5A6473]">{p.description}</p>}
+
+      {/* Elimina progetto */}
+      <form action={deleteProject}>
+        <input type="hidden" name="id" value={p.id} />
+        <SubmitButton pendingLabel="Eliminazione…" className="rounded-[10px] px-3 py-2 text-sm font-bold text-danger ring-1 ring-[#F2C7BD]">
+          <IconTrash size={16} /> Elimina progetto
+        </SubmitButton>
+      </form>
 
       {/* Task del progetto */}
       <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-bold">Task ({taskRows.length})</h2>
+        <div className="mb-2.5 flex items-center justify-between">
+          <h2 className="font-display font-bold text-[#1A1F2B]">Task ({taskRows.length})</h2>
           <CreateTaskButton projects={[{ id: p.id, name: p.name }]} members={memberList} defaultProjectId={p.id} />
         </div>
         {taskRows.length === 0 ? (
-          <EmptyState title="Nessun task" />
+          <EmptyState title="Nessun task" hint="Crea il primo task del progetto." illustration={<EmptyTasks />} />
         ) : (
           <div className="space-y-2">
             {taskRows.map((t) => (
               <Card key={t.id} className="p-3">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold">{t.title}</p>
+                  <p className="font-bold text-[#1A1F2B]">{t.title}</p>
                   <div className="flex shrink-0 items-center gap-1">
                     <TaskStatusBadge status={t.status} />
                     <EditTask task={t} members={memberList} />
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <PriorityPips level={t.priority_level} />
-                  <div className="flex items-center gap-2">
-                    {t.due_date && <span className="text-xs text-slate-400">{formatDate(t.due_date, 'd MMM')}</span>}
+                  <PriorityBadge level={t.priority_level} />
+                  <div className="flex items-center gap-2.5">
+                    {t.due_date && <span className="text-[11px] font-semibold text-[#9CA5B3]">{formatDate(t.due_date, 'd MMM')}</span>}
                     {t.assignee?.username && (
-                      <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Avatar name={t.assignee.username} /> {t.assignee.username}
+                      <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5A6473]">
+                        <Avatar name={t.assignee.username} size={20} /> {t.assignee.username}
                       </span>
                     )}
                   </div>
@@ -119,7 +113,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             ))}
           </div>
         )}
-        <p className="mt-2 text-center text-xs text-slate-400">Trascina i task tra gli stati dalla pagina <strong>Task</strong>.</p>
+        <p className="mt-2 text-center text-[11px] font-medium text-[#9CA5B3]">Trascina i task tra gli stati dalla pagina <strong>Task</strong>.</p>
       </section>
 
       {/* Allegati */}

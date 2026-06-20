@@ -135,19 +135,29 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
 
 export const TASK_STATUS_ORDER: TaskStatus[] = ['da_fare', 'in_corso', 'in_revisione', 'completato']
 
-// Priorità 1–5: etichetta e colore
+// Priorità 1–5: 1 = più urgente (P1) … 5 = meno urgente (P5)
 export const PRIORITY_LABEL: Record<number, string> = {
-  1: 'Molto bassa',
-  2: 'Bassa',
+  1: 'Urgente',
+  2: 'Alta',
   3: 'Media',
-  4: 'Alta',
-  5: 'Urgente',
+  4: 'Bassa',
+  5: 'Molto bassa',
 }
 
+// Colore "pieno" del pallino priorità (1 rosso … 5 grigio)
 export function priorityColor(level: number): string {
-  if (level >= 5) return 'bg-red-500'
-  if (level === 4) return 'bg-orange-500'
+  if (level <= 1) return 'bg-red-500'
+  if (level === 2) return 'bg-orange-500'
   if (level === 3) return 'bg-amber-500'
-  if (level === 2) return 'bg-sky-500'
+  if (level === 4) return 'bg-sky-500'
   return 'bg-slate-400'
+}
+
+// Stile del badge "P#" (bg + testo) come nei mockup
+export function priorityBadge(level: number): string {
+  if (level <= 1) return 'bg-[#FBEAE6] text-[#D8553F]'
+  if (level === 2) return 'bg-[#FDF4DD] text-[#C8932B]'
+  if (level === 3) return 'bg-[#FDF4DD] text-[#E5A93A]'
+  if (level === 4) return 'bg-[#EEF5FC] text-[#2A78C2]'
+  return 'bg-[#EFF1F5] text-[#5A6473]'
 }

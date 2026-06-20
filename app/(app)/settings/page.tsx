@@ -2,13 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
 import { Card, PageHeader, Avatar } from '@/components/ui'
 import { updateRegistrationCode } from '@/app/(app)/actions'
-import { SubmitSpinner } from '@/components/loading-overlay'
+import { SubmitButton } from '@/components/submit-button'
 import type { Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 const inputCls =
-  'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
+  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export default async function SettingsPage() {
   const profile = await requireProfile()
@@ -56,17 +56,16 @@ export default async function SettingsPage() {
       </section>
 
       {profile.role === 'admin' && (
-        <Card className="ring-violet-100" style={{ backgroundColor: 'var(--brand-50)' }}>
+        <Card style={{ backgroundColor: 'var(--brand-50)' }}>
           <h2 className="mb-1 font-bold" style={{ color: 'var(--brand)' }}>Nome collaborazione</h2>
           <p className="mb-3 text-sm text-slate-600">
             Codice condiviso necessario per registrarsi. Cambialo quando vuoi: i nuovi iscritti dovranno usare quello aggiornato.
           </p>
           <form action={updateRegistrationCode} className="flex gap-2">
-            <SubmitSpinner />
             <input name="registration_code" defaultValue={code ?? ''} required className={inputCls} />
-            <button className="press rounded-xl px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--brand)' }}>
+            <SubmitButton pendingLabel="…" className="rounded-[10px] px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
               Salva
-            </button>
+            </SubmitButton>
           </form>
         </Card>
       )}

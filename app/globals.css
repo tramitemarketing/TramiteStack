@@ -1,18 +1,107 @@
 @import "tailwindcss";
 
-/* ===== Palette T-Stack v2 ===== */
+/* ===== Font self-hosted (Sora display + Manrope testo) ===== */
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/sora-500.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/sora-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/sora-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/sora-800.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/manrope-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/manrope-500.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/manrope-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/manrope-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/manrope-800.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ===== Palette T-Stack · Stack Blue + Signal Gold ===== */
 :root {
-  --background: #f4f5fb;
-  --surface: #ffffff;
-  --foreground: #1a1730;
-  --muted: #6b7280;
-  --brand: #6d28d9;        /* violet-700 */
-  --brand-600: #7c3aed;
-  --brand-50: #f3effe;
-  --accent: #06b6d4;       /* cyan-500 */
-  --ok: #10b981;
-  --warn: #f59e0b;
-  --danger: #ef4444;
+  --background: #F7F8FA;   /* Slate-50 */
+  --surface: #FFFFFF;
+  --foreground: #1A1F2B;   /* Slate-900 */
+  --muted: #5A6473;        /* Slate-600 */
+  --hairline: #E0E4EB;     /* Slate-200 */
+
+  --brand: #0F4C81;        /* Stack Blue 800 */
+  --brand-600: #1660A3;    /* 700 */
+  --brand-500: #2A78C2;    /* 600 (info) */
+  --brand-50: #EEF5FC;     /* 100 */
+  --navy: #0A2E4D;         /* 900 */
+
+  --accent: #F2C14E;       /* Signal Gold 400 */
+  --accent-600: #E5A93A;   /* 500 */
+
+  --ok: #1F8A5B;
+  --warn: #E5A93A;
+  --danger: #D8553F;
+  --info: #2A78C2;
+
+  /* Categorie app */
+  --cat-evento: #7C5CD6;
+  --cat-scadenza: #E5A93A;
+  --cat-consegna: #2A78C2;
+  --cat-entrata: #1F8A5B;
+  --cat-uscita: #D8553F;
 }
 
 @theme inline {
@@ -21,8 +110,17 @@
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
   --color-brand-600: var(--brand-600);
+  --color-brand-500: var(--brand-500);
+  --color-brand-50: var(--brand-50);
+  --color-navy: var(--navy);
   --color-accent: var(--accent);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-accent-600: var(--accent-600);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Sora', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 html {
@@ -32,44 +130,54 @@ html {
   color: var(--foreground);
 }
 
+/* Titoli e numeri chiave in Sora */
+.font-display { font-family: var(--font-display); }
+.tnum { font-variant-numeric: tabular-nums; }
+
 /* Spazio per la bottom-nav (safe-area iOS) */
 .with-bottom-nav {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 
-/* ===== Skeleton shimmer ===== */
+/* ===== Skeleton shimmer (Slate-100 → Slate-200) ===== */
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: #e7e8f0;
-  border-radius: 0.75rem;
+  background: #EFF1F5;
+  border-radius: 0.5rem;
 }
 .skeleton::after {
   content: "";
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  background: linear-gradient(90deg, transparent, rgba(224, 228, 235, 0.9), transparent);
   animation: shimmer 1.4s infinite;
 }
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
 
-/* ===== Spinner a cerchio ===== */
+/* ===== Spinner a cerchio · traccia Slate-200 / top Stack Blue ===== */
 .spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid rgba(109, 40, 217, 0.25);
+  border: 2.5px solid #E0E4EB;
   border-top-color: var(--brand);
   border-radius: 9999px;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Feedback immediato sui bottoni */
 button, a, [role="button"] { transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease; }
 .press:active { transform: scale(0.97); }
+
+/* Texture leggera a punti (stati vuoti / hero) */
+.dot-grid {
+  background-image: radial-gradient(#D9E8F8 1.3px, transparent 1.3px);
+  background-size: 14px 14px;
+}
 
 /* Nasconde la scrollbar orizzontale della board */
 .no-scrollbar::-webkit-scrollbar { display: none; }

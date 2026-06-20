@@ -4,10 +4,10 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createTask } from '@/app/(app)/actions'
-import { CenterSpinner } from '@/components/loading-overlay'
+import { IconPlus } from '@/components/icons'
 
 const inputCls =
-  'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
+  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export function CreateTaskButton({
   projects,
@@ -34,13 +34,12 @@ export function CreateTaskButton({
 
   return (
     <>
-      {pending && <CenterSpinner />}
       <button
         onClick={() => setOpen(true)}
-        className="press inline-flex items-center gap-1 rounded-xl px-3.5 py-2 text-sm font-semibold text-white shadow-sm"
+        className="press inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2.5 text-sm font-bold text-white shadow-sm"
         style={{ backgroundColor: 'var(--brand)' }}
       >
-        + Crea Task
+        <IconPlus size={16} strokeWidth={2.6} /> Nuovo
       </button>
 
       <AnimatePresence>
@@ -61,7 +60,7 @@ export function CreateTaskButton({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-bold">Nuovo task</h2>
+                <h2 className="font-display text-lg font-bold text-navy">Nuovo task</h2>
                 <button onClick={() => setOpen(false)} className="text-slate-400">✕</button>
               </div>
               <form onSubmit={onSubmit} className="space-y-3">

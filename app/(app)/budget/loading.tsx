@@ -1,13 +1,11 @@
-import { HeaderSkeleton, GridSkeleton, ListSkeleton } from '@/components/skeletons'
-import { CenterSpinner } from '@/components/loading-overlay'
+import { GridSkeleton, ListSkeleton } from '@/components/skeletons'
 
 export default function Loading() {
   return (
     <div className="space-y-5">
-      <HeaderSkeleton />
+      <div className="skeleton h-28 w-full" />
       <GridSkeleton cells={4} />
       <ListSkeleton rows={3} />
-      <CenterSpinner />
     </div>
   )
 }

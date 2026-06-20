@@ -68,7 +68,7 @@ export function InstallPrompt() {
           className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-2xl px-4"
         >
           <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-lg ring-1 ring-slate-200">
-            <LogoMark size={40} />
+            <LogoMark size={40} boxed />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold">Installa T-Stack</p>
               {isIOS ? (

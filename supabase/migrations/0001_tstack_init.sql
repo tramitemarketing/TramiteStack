@@ -222,6 +222,10 @@ from tstack.transactions
 group by 1
 order by 1;
 
+-- Le viste rispettano la RLS delle tabelle sottostanti (no bypass per anon)
+alter view tstack.project_financials set (security_invoker = on);
+alter view tstack.monthly_income set (security_invoker = on);
+
 -- =====================================================================
 -- Row Level Security
 -- =====================================================================

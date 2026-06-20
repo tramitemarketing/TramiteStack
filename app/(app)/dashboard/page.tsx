@@ -1,79 +1,63 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
-import { Card, PageHeader, TaskStatusBadge, EmptyState } from '@/components/ui'
-import { formatEuro, formatDate } from '@/lib/utils'
-import type { Task, MonthlyIncome } from '@/types/database'
+import { Card, PageHeader, TaskStatusBadge, PriorityPips, EmptyState } from '@/components/ui'
+import { formatEuro } from '@/lib/utils'
+import type { Task, TeamBalance } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
-type TaskWithProject = Task & { projects: { name: string } | null }
+type TaskRow = Task & { projects: { name: string } | null }
 
 export default async function DashboardPage() {
   const profile = await requireProfile()
   const supabase = await createClient()
   const today = new Date().toISOString().slice(0, 10)
-  const monthStart = today.slice(0, 8) + '01'
 
-  const [{ data: dueTasks }, { count: inProgressCount }, { data: income }] = await Promise.all([
+  const [{ data: balance }, { data: dueToday }] = await Promise.all([
+    supabase.from('team_balances').select('*').eq('user_id', profile.id).maybeSingle(),
     supabase
       .from('tasks')
       .select('*, projects(name)')
+      .eq('due_date', today)
       .neq('status', 'completato')
-      .lte('due_date', today)
-      .order('due_date', { ascending: true })
-      .limit(5),
-    supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'in_corso'),
-    supabase.from('monthly_income').select('*').eq('month', monthStart).maybeSingle(),
+      .order('priority_level', { ascending: false }),
   ])
 
-  const m = (income as MonthlyIncome | null) ?? { income: 0, expense: 0, net: 0, month: monthStart }
-  const tasks = (dueTasks as TaskWithProject[] | null) ?? []
+  const myBalance = (balance as TeamBalance | null)?.balance ?? 0
+  const tasks = (dueToday as TaskRow[] | null) ?? []
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title={`Ciao ${profile.full_name?.split(' ')[0] || ''} 👋`}
-        subtitle="Ecco la situazione di oggi"
-      />
+      <PageHeader title={`Ciao ${profile.full_name?.split(' ')[0] || ''} 👋`} subtitle="La tua giornata" />
 
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <p className="text-xs text-slate-500">Entrate del mese</p>
-          <p className="mt-1 text-lg font-bold text-emerald-600">{formatEuro(Number(m.income))}</p>
-        </Card>
-        <Card>
-          <p className="text-xs text-slate-500">Uscite del mese</p>
-          <p className="mt-1 text-lg font-bold text-red-600">{formatEuro(Number(m.expense))}</p>
-        </Card>
-        <Card>
-          <p className="text-xs text-slate-500">Saldo del mese</p>
-          <p className="mt-1 text-lg font-bold">{formatEuro(Number(m.net))}</p>
-        </Card>
-        <Card>
-          <p className="text-xs text-slate-500">Task in corso</p>
-          <p className="mt-1 text-lg font-bold text-amber-600">{inProgressCount ?? 0}</p>
-        </Card>
-      </div>
+      {/* Bilancio personale: solo saldo attuale */}
+      <Card className="bg-gradient-to-br from-violet-600 to-cyan-500 text-white ring-0">
+        <p className="text-sm/5 opacity-90">Il tuo saldo personale</p>
+        <p className="mt-1 text-3xl font-extrabold tracking-tight">{formatEuro(Number(myBalance))}</p>
+        <Link href="/budget" className="mt-2 inline-block text-sm font-semibold underline opacity-90">
+          Vai al bilancio
+        </Link>
+      </Card>
 
+      {/* Task da fare con scadenza odierna */}
       <section>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-semibold">Scadenze di oggi</h2>
-          <Link href="/tasks" className="text-sm font-medium text-indigo-600">
+          <h2 className="font-bold">Task di oggi</h2>
+          <Link href="/tasks" className="text-sm font-semibold text-brand" style={{ color: 'var(--brand)' }}>
             Tutti i task
           </Link>
         </div>
         {tasks.length === 0 ? (
-          <EmptyState title="Nessuna scadenza in arrivo" hint="Goditi la giornata 🎉" />
+          <EmptyState title="Niente in scadenza oggi" hint="Goditi la giornata 🎉" />
         ) : (
           <div className="space-y-2">
             {tasks.map((t) => (
               <Card key={t.id} className="flex items-center justify-between gap-3 p-3">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{t.title}</p>
-                  <p className="truncate text-xs text-slate-500">
-                    {t.projects?.name ?? 'Senza progetto'} · scade {formatDate(t.due_date)}
-                  </p>
+                  <p className="truncate font-semibold">{t.title}</p>
+                  <p className="truncate text-xs text-slate-500">{t.projects?.name ?? 'Senza progetto'}</p>
+                  <div className="mt-1"><PriorityPips level={t.priority_level} /></div>
                 </div>
                 <TaskStatusBadge status={t.status} />
               </Card>

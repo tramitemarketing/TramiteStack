@@ -1,12 +1,9 @@
-// Tipi del database T-Stack.
-// Mantenere allineato con supabase/migrations/0001_init.sql.
-// In produzione si possono rigenerare con: supabase gen types typescript
-// oppure col tool MCP generate_typescript_types.
+// Tipi del database T-Stack (schema `tstack`).
+// Mantenere allineato con supabase/migrations/0001_tstack_init.sql + 0002_tstack_redesign.sql.
 
 export type UserRole = 'admin' | 'member'
 export type ProjectStatus = 'attivo' | 'in_corso' | 'completato' | 'sospeso'
 export type TaskStatus = 'da_fare' | 'in_corso' | 'in_revisione' | 'completato'
-export type TaskPriority = 'bassa' | 'media' | 'alta'
 export type TxType = 'entrata' | 'uscita'
 
 export interface Profile {
@@ -35,6 +32,7 @@ export interface Project {
   name: string
   description: string | null
   status: ProjectStatus
+  priority_level: number // 1–5
   start_date: string | null
   due_date: string | null
   budget_amount: number
@@ -48,7 +46,7 @@ export interface Task {
   title: string
   description: string | null
   status: TaskStatus
-  priority: TaskPriority
+  priority_level: number // 1–5
   assignee_id: string | null
   due_date: string | null
   position: number
@@ -73,6 +71,7 @@ export interface CalendarEvent {
 export interface Transaction {
   id: string
   project_id: string | null
+  owner_id: string | null
   type: TxType
   amount: number
   currency: string
@@ -109,21 +108,13 @@ export interface Notification {
   created_at: string
 }
 
-export interface ProjectFinancials {
-  project_id: string
-  project_name: string
-  client_id: string | null
-  status: ProjectStatus
+export interface TeamBalance {
+  user_id: string
+  full_name: string
+  role: UserRole
   total_income: number
   total_expense: number
-  margin: number
-}
-
-export interface MonthlyIncome {
-  month: string
-  income: number
-  expense: number
-  net: number
+  balance: number
 }
 
 // Etichette leggibili (UI in italiano)
@@ -143,8 +134,19 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
 
 export const TASK_STATUS_ORDER: TaskStatus[] = ['da_fare', 'in_corso', 'in_revisione', 'completato']
 
-export const TASK_PRIORITY_LABEL: Record<TaskPriority, string> = {
-  bassa: 'Bassa',
-  media: 'Media',
-  alta: 'Alta',
+// Priorità 1–5: etichetta e colore
+export const PRIORITY_LABEL: Record<number, string> = {
+  1: 'Molto bassa',
+  2: 'Bassa',
+  3: 'Media',
+  4: 'Alta',
+  5: 'Urgente',
+}
+
+export function priorityColor(level: number): string {
+  if (level >= 5) return 'bg-red-500'
+  if (level === 4) return 'bg-orange-500'
+  if (level === 3) return 'bg-amber-500'
+  if (level === 2) return 'bg-sky-500'
+  return 'bg-slate-400'
 }

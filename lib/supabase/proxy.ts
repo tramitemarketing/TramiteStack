@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
-  const isPublic = path === '/login' || path.startsWith('/auth')
+  const isPublic = path === '/login' || path === '/register' || path.startsWith('/auth')
 
   // Non autenticato su rotta protetta -> login
   if (!user && !isPublic) {

@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'icons')
 mkdirSync(outDir, { recursive: true })
 
-const BG = [79, 70, 229] // indigo-600
+const BG = [109, 40, 217] // violet-700 (brand)
 const FG = [255, 255, 255]
 
 function crc32(buf) {

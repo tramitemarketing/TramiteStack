@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Gestione lavoro, task, calendario e bilancio',
     start_url: '/dashboard',
     display: 'standalone',
-    background_color: '#f8fafc',
-    theme_color: '#4f46e5',
+    background_color: '#f4f5fb',
+    theme_color: '#6d28d9',
     orientation: 'portrait',
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

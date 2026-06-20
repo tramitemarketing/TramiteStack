@@ -1,97 +1,107 @@
-# Istruzioni T-Stack
+# Manuale T-Stack
 
-Guida pratica per mettere in piedi l'app e usarla. Due parti:
-**A) Setup tecnico** (una volta sola) · **B) Uso quotidiano** (per i dipendenti).
+Guida completa per configurare e usare T-Stack.
+**A) Setup tecnico** (una volta) · **B) Variabili d'ambiente** · **C) Deploy Vercel** · **D) Uso quotidiano**.
 
 ---
 
-## A) Setup tecnico
+## A) Setup tecnico (Supabase)
 
-> ⚙️ **Già fatto per te:** lo schema `tstack` è stato creato sul progetto Supabase **"bussola"**
-> (`bxmatbhaxkdsuzcojesj`), con tabelle, viste bilancio, RLS, bucket `tstack-attachments`, dati demo
-> e profili per gli utenti esistenti. Le chiavi pubbliche sono in `.env.production`. I passi sotto
-> servono solo per ricreare l'ambiente altrove o per capire com'è configurato.
+T-Stack vive nel progetto Supabase **"bussola"** (`bxmatbhaxkdsuzcojesj`) in uno **schema dedicato
+`tstack`**, isolato dall'app già presente. Lo schema, le tabelle, RLS, viste, il bucket allegati e i
+dati base **sono già stati creati**. I passi qui servono per capire la configurazione o ricrearla.
 
-### 1. Database (progetto "bussola", schema dedicato `tstack`)
-T-Stack **non usa un progetto nuovo**: vive nello schema `tstack` dentro il progetto bussola, così
-da non interferire con l'app già presente. Per (ri)applicarlo:
-1. **SQL Editor** della dashboard Supabase → incolla `supabase/migrations/0001_tstack_init.sql` → **Run**.
-   Crea schema `tstack`, tabelle, viste, **RLS**, bucket `tstack-attachments`, grant ed **espone lo
-   schema all'API** (`pgrst.db_schemas = 'public, graphql_public, tstack'`).
-2. (Facoltativo) Dati demo: esegui `supabase/seed.sql`.
+### 1. Schema del database
+Le migration sono in `supabase/migrations/`:
+- `0001_tstack_init.sql` — schema, tabelle, RLS, viste, bucket `tstack-attachments`, esposizione API.
+- `0002_tstack_redesign.sql` — priorità 1–5, bilancio personale (owner), codice di registrazione, pulizia demo.
 
-> Lo schema `tstack` è esposto all'API; i client Supabase usano `db: { schema: 'tstack' }` (già nel codice).
+Per (ri)applicarle: Supabase → **SQL Editor** → incolla il contenuto dei file in ordine → **Run**.
 
-### 2. Variabili d'ambiente
-- Le **chiavi pubbliche** (URL + anon key del progetto bussola) sono già in **`.env.production`**
-  (sicure: protette da RLS). Per il locale: `cp .env.production .env.local`.
-- Per il **cron promemoria** servono, da impostare nelle env di Vercel (segrete):
-  `SUPABASE_SERVICE_ROLE_KEY` (Dashboard → Project Settings → API) e un `CRON_SECRET` a piacere.
+### 2. Disattivare la conferma email (accesso immediato) ⚠️ IMPORTANTE
+Perché la registrazione dia accesso **subito**:
+Supabase → **Authentication → Sign In / Providers → Email** → disattiva **"Confirm email"** → salva.
 
-### 4. Avviare in locale
-```bash
-npm install
-npm run dev      # http://localhost:3000
-```
+### 3. Impostare il "nome collaborazione" (codice di registrazione)
+È il codice condiviso che abilita solo i dipendenti veri a registrarsi.
+- Valore iniziale: **`TRAMITE2026`** (cambialo!).
+- Da **app** (consigliato): accedi come **admin** → **Impostazioni → Nome collaborazione** → modifica.
+- Da **SQL**:
+  ```sql
+  update tstack.app_settings set registration_code = 'IL_TUO_CODICE' where id = true;
+  ```
 
-### 5. Deploy su Vercel
-1. Collega il repo GitHub su [vercel.com](https://vercel.com) → **New Project**.
-2. In **Environment Variables** inserisci le stesse variabili di `.env.local`.
-3. Deploy. Vercel assegna un dominio `*.vercel.app` (collegabile a un dominio custom).
-4. **Cron promemoria** (facoltativo): aggiungi un Vercel Cron Job che chiama
-   `GET /api/reminders` con header `Authorization: Bearer <CRON_SECRET>` (es. ogni mattina).
-
-### 6. Creare i 4 account (solo invito)
-L'app **non** ha registrazione aperta. L'admin crea gli utenti:
-
-**Opzione semplice (dashboard):**
-1. Supabase → **Authentication → Users → Add user**.
-2. Inserisci email + password e crea. Il profilo nasce in automatico (trigger `on_auth_user_created`).
-3. Comunica le credenziali al dipendente (che potrà poi cambiare password).
-
-> Il profilo T-Stack viene creato **in automatico al primo accesso** (lazy). In più, un profilo
-> esiste già per gli utenti presenti nel progetto. Tabella: `tstack.profiles`.
-
-**Rendere admin un utente:** nel **SQL Editor**:
+### 4. Promuovere un amministratore
+Il profilo si crea da solo al primo accesso. Per renderlo admin:
 ```sql
 update tstack.profiles set role = 'admin'
 where id = (select id from auth.users where email = 'tu@tramitemarketing.it');
 ```
-
-**Disattivare un dipendente** (toglie l'accesso ai dati di T-Stack senza cancellare l'account):
+Disattivare un collaboratore (gli toglie l'accesso ai dati senza cancellare l'account):
 ```sql
 update tstack.profiles set active = false where id = '<user-id>';
 ```
 
-### 7. Installare l'app sul telefono (PWA)
-- **iPhone (Safari):** apri il sito → Condividi → *Aggiungi a Home*.
-- **Android (Chrome):** apri il sito → menu ⋮ → *Installa app / Aggiungi a Home*.
+---
+
+## B) Variabili d'ambiente (le tieni tu — nessuna chiave nella repo)
+
+I valori si trovano in **Supabase → Project Settings → API**:
+
+| Variabile | Dove trovarla | Tipo |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | *Project URL* | pubblica |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *Project API keys → anon/publishable* | pubblica |
+| `SUPABASE_SERVICE_ROLE_KEY` | *Project API keys → service_role* | **segreta** |
+| `CRON_SECRET` | la scegli tu | segreta |
+
+- **In locale:** copia il template e compila — il file **non** viene committato:
+  ```bash
+  cp .env.example .env.local
+  ```
+- **Su Vercel:** Project → **Settings → Environment Variables** → aggiungi le 4 variabili
+  (Production + Preview). `SUPABASE_SERVICE_ROLE_KEY` e `CRON_SECRET` servono solo per i promemoria.
+- ❌ **Non** mettere chiavi in file committati. `.gitignore` ignora tutti i `.env*` (tranne `.env.example`).
 
 ---
 
-## B) Uso quotidiano (dipendenti)
+## C) Deploy su Vercel
 
-- **Accesso:** apri T-Stack, inserisci email e password ricevute dall'admin.
-- **Home (Dashboard):** colpo d'occhio su scadenze di oggi, task in corso e saldo del mese.
-- **Progetti:** crea un progetto, scegli il cliente, imposta budget e scadenza.
-  Dentro al progetto gestisci **task**, **movimenti** (entrate/uscite) e **allegati**.
-- **Task:** la board mostra tutti i task per stato. Cambia stato con il menù a tendina → **OK**.
-- **Calendario:** vista del mese; aggiungi eventi e vedi i giorni con scadenze (pallino).
-- **Bilancio:** entrate/uscite del mese, **margine per progetto**, ultimi movimenti.
-  Registra un movimento (anche "Generale", non legato a un progetto).
-- **Clienti:** anagrafica con contatti e note.
-- **Impostazioni:** profilo, elenco team; l'admin trova le note per gestire gli utenti.
+1. [vercel.com](https://vercel.com) → **New Project** → importa il repo GitHub `tramitemarketing/TramiteStack`.
+2. **Environment Variables**: inserisci le variabili del punto B.
+3. **Deploy.** Vercel assegna un dominio `*.vercel.app` (collegabile a un dominio tuo).
+4. **Promemoria (facoltativo):** aggiungi un **Vercel Cron Job** che chiama `GET /api/reminders`
+   con header `Authorization: Bearer <CRON_SECRET>` (es. ogni mattina).
 
-> **Nota:** tutti i 4 utenti vedono tutto (task, calendario, bilancio). Le notifiche personali
-> (promemoria scadenze) sono invece private di ciascun utente.
+### Installare la PWA sul telefono
+- **iPhone (Safari):** Condividi → *Aggiungi a Home*.
+- **Android (Chrome):** menu ⋮ → *Installa app*.
+
+---
+
+## D) Uso quotidiano
+
+- **Registrazione:** apri l'app → *Registrati* → Nome, email, password e **nome collaborazione** →
+  accesso immediato. (Senza il codice corretto non si entra.)
+- **Home:** il tuo **saldo personale** e i **task di oggi**.
+- **Task:** *Crea Task* (scegli progetto, priorità 1–5, scadenza, a chi è in carico). **Trascina** le
+  card tra le 4 colonne per cambiarne lo stato: appare uno **spinner** finché il salvataggio è
+  confermato. Cestino sulla card per eliminare.
+- **Calendario:** due mesi affiancati, frecce per navigare; i pallini indicano eventi (viola),
+  scadenze task (ambra) e consegne progetti (ciano). Tocca un giorno per il dettaglio.
+- **Bilancio:** saldo di **ogni dipendente** (visibile a tutti). *Aggiungi entrata/uscita* scegliendo
+  la persona. Cestino sui movimenti.
+- **Progetti:** crea progetto (priorità, stato, scadenza), gestisci i suoi **task** e gli **allegati**,
+  eliminalo col cestino.
+- **Impostazioni:** profilo, team e (admin) modifica del **nome collaborazione**.
 
 ---
 
 ## Risoluzione problemi
-- **Non riesco ad accedere:** verifica che l'account sia stato creato dall'admin e che `active = true`.
-- **Pagina vuota / errori dati:** controlla che le variabili `NEXT_PUBLIC_SUPABASE_*` siano corrette
-  e che la migration sia stata eseguita.
-- **Upload allegati non funziona:** assicurati che la migration abbia creato il bucket
-  `tstack-attachments` e le relative policy di storage.
-- **Errori "schema must be one of...":** verifica che lo schema `tstack` sia esposto all'API
-  (la migration lo fa con `alter role authenticator set pgrst.db_schemas = ...; notify pgrst, ...`).
+- **Registrazione rifiutata:** "nome collaborazione" errato → verifica il codice in *Impostazioni*
+  (admin) o in `tstack.app_settings`.
+- **Mi chiede di confermare l'email:** disattiva *Confirm email* (sezione A.2).
+- **Pagina vuota / errori dati:** controlla le `NEXT_PUBLIC_SUPABASE_*` e che le migration siano applicate.
+- **Allegati:** serve il bucket `tstack-attachments` e le sue policy (creati dalla migration).
+- **Errore "schema must be one of…":** lo schema `tstack` dev'essere esposto all'API (lo fa la migration
+  `0001`: `pgrst.db_schemas = 'public, graphql_public, tstack'`).

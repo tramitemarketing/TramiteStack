@@ -1,139 +1,80 @@
-import {
-  startOfMonth,
-  endOfMonth,
-  startOfWeek,
-  endOfWeek,
-  eachDayOfInterval,
-  format,
-  isSameMonth,
-  isToday,
-} from 'date-fns'
-import { it } from 'date-fns/locale'
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, format } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
-import { Card, PageHeader } from '@/components/ui'
-import { formatDate, cn } from '@/lib/utils'
+import { PageHeader, Card } from '@/components/ui'
+import { CalendarView, type CalItem } from '@/components/calendar-view'
 import { createEvent } from '@/app/(app)/actions'
 import type { CalendarEvent, Task, Project } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 const inputCls =
-  'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200'
+  'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
 
-export default async function CalendarPage() {
+export default async function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ off?: string }>
+}) {
+  const { off: offParam } = await searchParams
+  const off = Number(offParam) || 0
+
+  const base = addMonths(new Date(), off)
+  const rangeStart = startOfWeek(startOfMonth(base), { weekStartsOn: 1 })
+  const rangeEnd = endOfWeek(endOfMonth(addMonths(base, 1)), { weekStartsOn: 1 })
+  const sIso = rangeStart.toISOString()
+  const eIso = rangeEnd.toISOString()
+  const sDay = format(rangeStart, 'yyyy-MM-dd')
+  const eDay = format(rangeEnd, 'yyyy-MM-dd')
+
   const supabase = await createClient()
-  const now = new Date()
-  const monthStart = startOfMonth(now)
-  const monthEnd = endOfMonth(now)
-  const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 })
-  const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
-  const days = eachDayOfInterval({ start: gridStart, end: gridEnd })
-
-  const [{ data: events }, { data: tasks }, { data: projects }] = await Promise.all([
-    supabase
-      .from('calendar_events')
-      .select('*')
-      .gte('starts_at', gridStart.toISOString())
-      .lte('starts_at', gridEnd.toISOString())
-      .order('starts_at'),
-    supabase
-      .from('tasks')
-      .select('id, title, due_date, status')
-      .gte('due_date', format(gridStart, 'yyyy-MM-dd'))
-      .lte('due_date', format(gridEnd, 'yyyy-MM-dd'))
-      .neq('status', 'completato'),
+  const [{ data: events }, { data: tasks }, { data: projects }, { data: projList }] = await Promise.all([
+    supabase.from('calendar_events').select('id, title, starts_at').gte('starts_at', sIso).lte('starts_at', eIso),
+    supabase.from('tasks').select('id, title, due_date').gte('due_date', sDay).lte('due_date', eDay).neq('status', 'completato'),
+    supabase.from('projects').select('id, name, due_date').gte('due_date', sDay).lte('due_date', eDay),
     supabase.from('projects').select('id, name').order('name'),
   ])
 
-  const evRows = (events as CalendarEvent[] | null) ?? []
-  const taskRows = (tasks as Pick<Task, 'id' | 'title' | 'due_date' | 'status'>[] | null) ?? []
-  const projList = (projects as Pick<Project, 'id' | 'name'>[] | null) ?? []
+  const items: CalItem[] = [
+    ...((events as Pick<CalendarEvent, 'id' | 'title' | 'starts_at'>[] | null) ?? []).map((e) => ({
+      id: 'e' + e.id, date: e.starts_at.slice(0, 10), title: e.title, kind: 'evento' as const,
+    })),
+    ...((tasks as Pick<Task, 'id' | 'title' | 'due_date'>[] | null) ?? []).map((t) => ({
+      id: 't' + t.id, date: t.due_date as string, title: 'Task: ' + t.title, kind: 'task' as const,
+    })),
+    ...((projects as Pick<Project, 'id' | 'name' | 'due_date'>[] | null) ?? []).map((p) => ({
+      id: 'p' + p.id, date: p.due_date as string, title: 'Consegna: ' + p.name, kind: 'progetto' as const,
+    })),
+  ]
 
-  // Conteggio elementi per giorno (eventi + scadenze)
-  function countForDay(d: Date): number {
-    const key = format(d, 'yyyy-MM-dd')
-    const ev = evRows.filter((e) => e.starts_at.slice(0, 10) === key).length
-    const tk = taskRows.filter((t) => t.due_date === key).length
-    return ev + tk
-  }
-
-  const upcoming = evRows
-    .filter((e) => new Date(e.starts_at) >= new Date(now.toDateString()))
-    .slice(0, 6)
+  const projects2 = (projList as Pick<Project, 'id' | 'name'>[] | null) ?? []
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Calendario" subtitle={format(now, 'MMMM yyyy', { locale: it })} />
+      <PageHeader title="Calendario" subtitle="Scadenze di task e progetti sincronizzate" />
 
-      <Card className="p-3">
-        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-slate-400">
-          {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
-        <div className="mt-1 grid grid-cols-7 gap-1">
-          {days.map((d) => {
-            const count = countForDay(d)
-            return (
-              <div
-                key={d.toISOString()}
-                className={cn(
-                  'flex aspect-square flex-col items-center justify-center rounded-lg text-sm',
-                  isSameMonth(d, now) ? 'text-slate-700' : 'text-slate-300',
-                  isToday(d) && 'bg-indigo-600 font-bold text-white',
-                )}
-              >
-                {format(d, 'd')}
-                {count > 0 && (
-                  <span className={cn('mt-0.5 h-1.5 w-1.5 rounded-full', isToday(d) ? 'bg-white' : 'bg-indigo-500')} />
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </Card>
+      <CalendarView items={items} off={off} />
 
-      <section>
-        <h2 className="mb-2 font-semibold">Prossimi eventi</h2>
-        {upcoming.length === 0 ? (
-          <p className="text-sm text-slate-400">Nessun evento in programma.</p>
-        ) : (
-          <div className="space-y-2">
-            {upcoming.map((e) => (
-              <Card key={e.id} className="flex items-center justify-between p-3">
-                <div>
-                  <p className="font-medium">{e.title}</p>
-                  <p className="text-xs text-slate-500">{formatDate(e.starts_at, "d MMM yyyy, HH:mm")}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section>
-        <details>
-          <summary className="cursor-pointer text-sm font-medium text-indigo-600">+ Nuovo evento</summary>
-          <Card className="mt-2">
-            <form action={createEvent} className="space-y-3">
-              <input name="title" required className={inputCls} placeholder="Titolo evento" />
-              <input type="datetime-local" name="starts_at" required className={inputCls} />
-              <select name="project_id" className={inputCls} defaultValue="">
-                <option value="">— Nessun progetto —</option>
-                {projList.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <input name="description" className={inputCls} placeholder="Note (facoltative)" />
-              <button className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white">
-                Aggiungi evento
-              </button>
-            </form>
-          </Card>
-        </details>
-      </section>
+      <details>
+        <summary className="cursor-pointer text-sm font-semibold text-brand" style={{ color: 'var(--brand)' }}>
+          + Nuovo evento
+        </summary>
+        <Card className="mt-2">
+          <form action={createEvent} className="space-y-3">
+            <input name="title" required className={inputCls} placeholder="Titolo evento" />
+            <input type="datetime-local" name="starts_at" required className={inputCls} />
+            <select name="project_id" className={inputCls} defaultValue="">
+              <option value="">— Nessun progetto —</option>
+              {projects2.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <input name="description" className={inputCls} placeholder="Note (facoltative)" />
+            <button className="press w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--brand)' }}>
+              Aggiungi evento
+            </button>
+          </form>
+        </Card>
+      </details>
     </div>
   )
 }

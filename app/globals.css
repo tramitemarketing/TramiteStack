@@ -1,24 +1,76 @@
 @import "tailwindcss";
 
+/* ===== Palette T-Stack v2 ===== */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --brand: #4f46e5;
+  --background: #f4f5fb;
+  --surface: #ffffff;
+  --foreground: #1a1730;
+  --muted: #6b7280;
+  --brand: #6d28d9;        /* violet-700 */
+  --brand-600: #7c3aed;
+  --brand-50: #f3effe;
+  --accent: #06b6d4;       /* cyan-500 */
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --danger: #ef4444;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
+  --color-brand-600: var(--brand-600);
+  --color-accent: var(--accent);
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 html {
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  background: var(--background);
+  color: var(--foreground);
 }
 
-/* Spazio per la bottom-nav su mobile (safe-area iOS inclusa) */
+/* Spazio per la bottom-nav (safe-area iOS) */
 .with-bottom-nav {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
+
+/* ===== Skeleton shimmer ===== */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e7e8f0;
+  border-radius: 0.75rem;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* ===== Spinner a cerchio ===== */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(109, 40, 217, 0.25);
+  border-top-color: var(--brand);
+  border-radius: 9999px;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Feedback immediato sui bottoni */
+button, a, [role="button"] { transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease; }
+.press:active { transform: scale(0.97); }
+
+/* Nasconde la scrollbar orizzontale della board */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

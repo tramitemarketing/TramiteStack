@@ -13,19 +13,9 @@ async function currentUserId() {
   return user?.id ?? null
 }
 
-// ---- Clienti ----
-export async function createClientRecord(formData: FormData) {
-  const supabase = await createClient()
-  const name = String(formData.get('name') ?? '').trim()
-  if (!name) return
-  await supabase.from('clients').insert({
-    name,
-    contact_email: String(formData.get('contact_email') ?? '') || null,
-    phone: String(formData.get('phone') ?? '') || null,
-    notes: String(formData.get('notes') ?? '') || null,
-  })
-  revalidatePath('/clients')
-  redirect('/clients')
+function clampPriority(v: unknown): number {
+  const n = Math.round(Number(v) || 3)
+  return Math.min(5, Math.max(1, n))
 }
 
 // ---- Progetti ----
@@ -38,10 +28,9 @@ export async function createProject(formData: FormData) {
     .insert({
       name,
       description: String(formData.get('description') ?? '') || null,
-      client_id: String(formData.get('client_id') ?? '') || null,
-      status: (String(formData.get('status') ?? 'attivo') as ProjectStatus),
+      status: String(formData.get('status') ?? 'attivo') as ProjectStatus,
+      priority_level: clampPriority(formData.get('priority_level')),
       due_date: String(formData.get('due_date') ?? '') || null,
-      budget_amount: Number(formData.get('budget_amount') ?? 0) || 0,
     })
     .select('id')
     .single()
@@ -53,10 +42,19 @@ export async function createProject(formData: FormData) {
 export async function setProjectStatus(formData: FormData) {
   const supabase = await createClient()
   const id = String(formData.get('id'))
-  const status = String(formData.get('status')) as ProjectStatus
-  await supabase.from('projects').update({ status }).eq('id', id)
+  await supabase
+    .from('projects')
+    .update({ status: String(formData.get('status')) as ProjectStatus })
+    .eq('id', id)
   revalidatePath(`/projects/${id}`)
   revalidatePath('/projects')
+}
+
+export async function deleteProject(formData: FormData) {
+  const supabase = await createClient()
+  await supabase.from('projects').delete().eq('id', String(formData.get('id')))
+  revalidatePath('/projects')
+  redirect('/projects')
 }
 
 // ---- Task ----
@@ -69,43 +67,58 @@ export async function createTask(formData: FormData) {
     project_id: projectId,
     title,
     description: String(formData.get('description') ?? '') || null,
-    priority: String(formData.get('priority') ?? 'media'),
+    priority_level: clampPriority(formData.get('priority_level')),
     assignee_id: String(formData.get('assignee_id') ?? '') || null,
     due_date: String(formData.get('due_date') ?? '') || null,
   })
   revalidatePath(`/projects/${projectId}`)
   revalidatePath('/tasks')
+  revalidatePath('/calendar')
 }
 
-export async function setTaskStatus(formData: FormData) {
+// Spostamento drag&drop: nuovo stato + posizione nella colonna
+export async function moveTask(id: string, status: TaskStatus, position: number) {
+  const supabase = await createClient()
+  await supabase.from('tasks').update({ status, position }).eq('id', id)
+  revalidatePath('/tasks')
+}
+
+export async function deleteTask(formData: FormData) {
   const supabase = await createClient()
   const id = String(formData.get('id'))
-  const status = String(formData.get('status')) as TaskStatus
-  await supabase.from('tasks').update({ status }).eq('id', id)
+  await supabase.from('tasks').delete().eq('id', id)
   revalidatePath('/tasks')
   const projectId = String(formData.get('project_id') ?? '')
   if (projectId) revalidatePath(`/projects/${projectId}`)
 }
 
-// ---- Transazioni (bilancio) ----
+// ---- Transazioni (bilancio personale) ----
 export async function createTransaction(formData: FormData) {
   const supabase = await createClient()
   const uid = await currentUserId()
   const type = String(formData.get('type') ?? 'entrata') as TxType
   const amount = Number(formData.get('amount') ?? 0)
-  if (!amount || amount <= 0) return
+  const ownerId = String(formData.get('owner_id') ?? '') || uid
+  if (!amount || amount <= 0 || !ownerId) return
   await supabase.from('transactions').insert({
     type,
     amount,
+    owner_id: ownerId,
     description: String(formData.get('description') ?? '') || null,
     category: String(formData.get('category') ?? '') || null,
     project_id: String(formData.get('project_id') ?? '') || null,
     occurred_on: String(formData.get('occurred_on') ?? '') || new Date().toISOString().slice(0, 10),
     created_by: uid,
   })
-  const projectId = String(formData.get('project_id') ?? '')
   revalidatePath('/budget')
-  if (projectId) revalidatePath(`/projects/${projectId}`)
+  revalidatePath('/dashboard')
+}
+
+export async function deleteTransaction(formData: FormData) {
+  const supabase = await createClient()
+  await supabase.from('transactions').delete().eq('id', String(formData.get('id')))
+  revalidatePath('/budget')
+  revalidatePath('/dashboard')
 }
 
 // ---- Eventi calendario ----
@@ -124,4 +137,19 @@ export async function createEvent(formData: FormData) {
     created_by: uid,
   })
   revalidatePath('/calendar')
+}
+
+export async function deleteEvent(formData: FormData) {
+  const supabase = await createClient()
+  await supabase.from('calendar_events').delete().eq('id', String(formData.get('id')))
+  revalidatePath('/calendar')
+}
+
+// ---- Impostazioni admin: codice di registrazione ----
+export async function updateRegistrationCode(formData: FormData) {
+  const supabase = await createClient()
+  const code = String(formData.get('registration_code') ?? '').trim()
+  if (!code) return
+  await supabase.from('app_settings').update({ registration_code: code, updated_at: new Date().toISOString() }).eq('id', true)
+  revalidatePath('/settings')
 }

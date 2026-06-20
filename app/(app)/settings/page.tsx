@@ -1,9 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
-import { Card, PageHeader } from '@/components/ui'
+import { Card, PageHeader, Avatar } from '@/components/ui'
+import { updateRegistrationCode } from '@/app/(app)/actions'
 import type { Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
+
+const inputCls =
+  'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
 
 export default async function SettingsPage() {
   const profile = await requireProfile()
@@ -11,26 +15,38 @@ export default async function SettingsPage() {
   const { data } = await supabase.from('profiles').select('*').order('full_name')
   const team = (data as Profile[] | null) ?? []
 
+  let code: string | null = null
+  if (profile.role === 'admin') {
+    const { data: cfg } = await supabase.from('app_settings').select('registration_code').eq('id', true).maybeSingle()
+    code = (cfg as { registration_code: string } | null)?.registration_code ?? null
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader title="Impostazioni" />
 
       <Card>
-        <h2 className="mb-2 font-semibold">Il mio profilo</h2>
-        <p className="text-sm text-slate-600">{profile.full_name || 'Nome non impostato'}</p>
-        <p className="text-xs text-slate-400">
-          Ruolo: {profile.role === 'admin' ? 'Amministratore' : 'Membro'}
-        </p>
+        <h2 className="mb-2 font-bold">Il mio profilo</h2>
+        <div className="flex items-center gap-2">
+          <Avatar name={profile.full_name} />
+          <div>
+            <p className="text-sm font-semibold">{profile.full_name || 'Nome non impostato'}</p>
+            <p className="text-xs text-slate-400">{profile.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+          </div>
+        </div>
       </Card>
 
       <section>
-        <h2 className="mb-2 font-semibold">Team ({team.length})</h2>
+        <h2 className="mb-2 font-bold">Team ({team.length})</h2>
         <div className="space-y-2">
           {team.map((m) => (
             <Card key={m.id} className="flex items-center justify-between p-3">
-              <div>
-                <p className="font-medium">{m.full_name || 'Utente'}</p>
-                <p className="text-xs text-slate-400">{m.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+              <div className="flex items-center gap-2">
+                <Avatar name={m.full_name} />
+                <div>
+                  <p className="text-sm font-semibold">{m.full_name || 'Utente'}</p>
+                  <p className="text-xs text-slate-400">{m.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+                </div>
               </div>
               {!m.active && <span className="text-xs text-red-500">disattivato</span>}
             </Card>
@@ -39,12 +55,17 @@ export default async function SettingsPage() {
       </section>
 
       {profile.role === 'admin' && (
-        <Card className="bg-indigo-50 ring-indigo-100">
-          <h2 className="mb-1 font-semibold text-indigo-900">Gestione utenti</h2>
-          <p className="text-sm text-indigo-800">
-            Gli account si creano dalla dashboard Supabase (Authentication → Users → Add user) o via
-            invito email. Vedi <span className="font-medium">docs/ISTRUZIONI.md</span> per i passaggi.
+        <Card className="ring-violet-100" style={{ backgroundColor: 'var(--brand-50)' }}>
+          <h2 className="mb-1 font-bold" style={{ color: 'var(--brand)' }}>Nome collaborazione</h2>
+          <p className="mb-3 text-sm text-slate-600">
+            Codice condiviso necessario per registrarsi. Cambialo quando vuoi: i nuovi iscritti dovranno usare quello aggiornato.
           </p>
+          <form action={updateRegistrationCode} className="flex gap-2">
+            <input name="registration_code" defaultValue={code ?? ''} required className={inputCls} />
+            <button className="press rounded-xl px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--brand)' }}>
+              Salva
+            </button>
+          </form>
         </Card>
       )}
     </div>

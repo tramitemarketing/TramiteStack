@@ -1,80 +1,57 @@
-# Code Review — T-Stack (scaffold iniziale)
+# Code Review — T-Stack v2
 
-Revisione dello scaffold MVP. Stato: **build ✓, lint ✓, typecheck ✓**.
-Legenda severità: 🔴 alta · 🟡 media · 🟢 bassa/nota.
-
-> **Aggiornamento integrazione (bussola):** lo schema è stato spostato in uno **schema dedicato
-> `tstack`** dentro il progetto Supabase esistente "bussola", per non collidere con l'app già
-> presente (che ha una tabella `public.tasks` diversa). Nessun oggetto condiviso toccato (niente
-> trigger su `auth.users`, bucket `tstack-attachments`, esposizione schema additiva). Migration
-> applicata e `get_advisors` eseguito: l'unico warning introdotto (`set_updated_at` search_path) è
-> stato **corretto**; gli altri warning sono preesistenti di bussola.
+Revisione del ridisegno. Stato: **build ✓, lint ✓, typecheck ✓**, migration applicate su bussola,
+advisor di sicurezza puliti per lo schema `tstack`.
+Legenda: 🔴 alta · 🟡 media · 🟢 bassa/nota.
 
 ## Sintesi
-Base solida e coerente: separazione netta tra lettura (Server Components) e scrittura
-(Server Actions), RLS attiva su tutte le tabelle, tipi del DB centralizzati, UI mobile-first.
-Adatta a un team di 4 persone. Le note sotto sono migliorie incrementali, non bloccanti.
-
----
+Ridisegno coerente con il documento: nuova IA (Home/Task/Calendario/Bilancio/Progetti), board
+drag&drop con meccanismo di stato curato (ottimistico + spinner), bilancio personale per dipendente,
+auth con codice di collaborazione, stile a box con animazioni e skeleton. Isolamento da bussola
+mantenuto (schema `tstack`, nessun oggetto condiviso toccato).
 
 ## Punti di forza
-- **Sicurezza dati alla fonte:** RLS su ogni tabella + funzioni helper `is_active_member()` /
-  `is_admin()` in `SECURITY DEFINER` per evitare ricorsione nelle policy di `profiles`.
-- **Segreti gestiti bene:** `service_role` usato solo nel route handler `/api/reminders`, mai nel client.
-- **Allineamento a Next 16:** uso corretto di `proxy.ts`, `await cookies()`, `params` async.
-- **Niente dipendenze di rete a build-time** (font di sistema) → build riproducibile.
-- **Modello dati pulito** con viste (`project_financials`, `monthly_income`) che spostano il calcolo
-  del bilancio nel DB invece che nel client.
-
----
+- **Sicurezza dati:** RLS su tutte le tabelle `tstack`; **viste con `security_invoker = on`** così i
+  saldi non sono leggibili da `anon` (corretto in fase di review). `check_registration_code` espone
+  solo un booleano.
+- **UX stato task:** update ottimistico + spinner sulla card durante il salvataggio; ordinamento
+  persistito con `position`; `@dnd-kit` funziona anche su touch (PWA).
+- **Niente segreti nella repo:** chiavi solo via env; `.env.example` come template.
+- **Coerenza schema:** il codice usa `.from('...')` invariato grazie a `db.schema='tstack'`.
 
 ## Findings
+### 🟡 Ordinamento fine tra le card
+Il drag aggiorna stato e posizione "in coda" alla colonna; il riordino preciso (drop in mezzo a due
+card) non è ancora gestito. Per ora sufficiente; in futuro usare `@dnd-kit/sortable` con reindex.
 
-### 🔴 (risolto) Conteggio "Task in corso" sempre a zero — `app/(app)/dashboard/page.tsx`
-La query usava `{ head: true, count: 'exact' }` ma il valore veniva letto da `data.length`
-(sempre `null`/0). **Corretto** leggendo `count` dalla risposta. *Lezione:* con `head:true` i
-dati non tornano, solo `count`.
+### 🟡 Conferma email è un passo manuale
+L'"accesso immediato" dipende dalla disattivazione di *Confirm email* su Supabase (non esiste tool
+MCP per cambiarla): documentato in `docs/ISTRUZIONI.md` §A.2. Senza, la registrazione non dà sessione.
 
-### 🟡 N+1 nel cron promemoria — `app/api/reminders/route.ts`
-Per ogni task si esegue una query di de-duplica separata. A questa scala (decine di task) è
-irrilevante, ma con la crescita conviene una singola query con `not in (...)` o un indice/vincolo
-unico su `(entity_type, entity_id)` filtrando le notifiche non lette.
+### 🟢 Reminders solo task
+`/api/reminders` genera promemoria per le scadenze task; gli eventi calendario e la **push reale
+"giorno prima"** (VAPID + service worker) sono pianificati in fase 2.
 
-### 🟡 Accessibilità: zoom disabilitato — `app/layout.tsx`
-`viewport` imposta `maximumScale: 1, userScalable: false` (utile per evitare zoom involontari su
-iOS nei form, ma limita l'accessibilità). Valutare di riabilitare lo zoom se richiesto.
+### 🟢 Eliminazioni senza conferma modale
+Il cestino elimina direttamente (con revalidate). Valutare una conferma per progetti (cascade su task).
 
-### 🟢 UX cambio stato con doppio passaggio — board task e dettaglio progetto
-Cambiare stato richiede di selezionare e premere "OK". Va bene per l'MVP; in futuro si può
-auto-inviare al cambio (`onChange`) o introdurre drag & drop sulla board.
+### 🟢 Validazione input minimale
+Le Server Actions validano l'essenziale; in futuro **Zod** per messaggi d'errore ricchi.
 
-### 🟢 Sanitizzazione nome file allegati — `components/attachments-panel.tsx`
-Il path storage usa `Date.now()-file.name`. Supabase gestisce la maggior parte dei caratteri, ma
-conviene normalizzare il nome (spazi/accenti) per URL più puliti.
-
-### 🟢 Validazione input minimale — Server Actions
-Le action validano l'essenziale (campi obbligatori, importi > 0) ma non con uno schema.
-Per robustezza futura si può introdurre **Zod** e messaggi d'errore in UI.
-
-### 🟢 Nessun test automatico
-Non ci sono ancora test. Per le parti critiche (viste bilancio, policy RLS) si consigliano test di
-integrazione contro un Supabase locale.
-
----
+### 🟢 Advisor preesistenti di bussola
+Restano alcuni warning su funzioni `public.*` di bussola e su *Leaked Password Protection*: non
+appartengono a T-Stack e non vanno modificati qui (eventualmente abilitare la protezione password a
+livello progetto).
 
 ## Sicurezza — checklist
-- [x] RLS abilitata su tutte le tabelle applicative
-- [x] Policy `notifications` ristretta al proprietario (`user_id = auth.uid()`)
-- [x] `service_role` solo server-side, endpoint cron protetto da `CRON_SECRET`
-- [x] Bucket `attachments` **privato** con policy per soli membri attivi
-- [x] Messaggi di login generici (no user enumeration)
-- [ ] (consigliato) Eseguire `get_advisors` su Supabase dopo il deploy per security/performance lint
+- [x] RLS su tutte le tabelle `tstack`; notifiche ristrette al proprietario
+- [x] Viste `security_invoker = on` (no bypass RLS per anon)
+- [x] `service_role` solo server-side; nessuna chiave nella repo
+- [x] Bucket `tstack-attachments` privato, policy per membri attivi
+- [x] `check_registration_code` SECURITY DEFINER ma ritorna solo booleano
+- [x] Funzioni con `search_path` impostato
 
----
-
-## Prossimi passi consigliati
-1. Provisioning Supabase + applicare `0001_init.sql`, poi rigenerare i tipi (`generate_typescript_types`)
-   per sostituire i tipi scritti a mano in `types/database.ts`.
-2. Deploy su Vercel con le env e schedulare il cron `/api/reminders`.
-3. Aggiungere validazione con Zod e qualche test sulle viste bilancio.
-4. Roadmap funzionale: time tracking, dashboard con grafici, sync Google Calendar.
+## Prossimi passi
+1. Disattivare *Confirm email* + impostare il codice di registrazione (vedi manuale).
+2. Deploy Vercel con le env (tenute dall'utente).
+3. Fase 2: Web Push "giorno prima", riordino fine card, conferme di eliminazione, Zod.

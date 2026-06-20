@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createTask } from '@/app/(app)/actions'
+import { CenterSpinner } from '@/components/loading-overlay'
 
 const inputCls =
   'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
@@ -17,9 +19,22 @@ export function CreateTaskButton({
   defaultProjectId?: string
 }) {
   const [open, setOpen] = useState(false)
+  const [pending, startTransition] = useTransition()
+  const router = useRouter()
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    startTransition(async () => {
+      await createTask(formData)
+      setOpen(false)
+      router.refresh()
+    })
+  }
 
   return (
     <>
+      {pending && <CenterSpinner />}
       <button
         onClick={() => setOpen(true)}
         className="press inline-flex items-center gap-1 rounded-xl px-3.5 py-2 text-sm font-semibold text-white shadow-sm"
@@ -49,7 +64,7 @@ export function CreateTaskButton({
                 <h2 className="text-lg font-bold">Nuovo task</h2>
                 <button onClick={() => setOpen(false)} className="text-slate-400">✕</button>
               </div>
-              <form action={createTask} className="space-y-3" onSubmit={() => setOpen(false)}>
+              <form onSubmit={onSubmit} className="space-y-3">
                 <input name="title" required className={inputCls} placeholder="Titolo del task" autoFocus />
                 <select name="project_id" required className={inputCls} defaultValue={defaultProjectId ?? ''}>
                   <option value="" disabled>Progetto…</option>
@@ -75,10 +90,11 @@ export function CreateTaskButton({
                 </select>
                 <button
                   type="submit"
-                  className="press w-full rounded-xl px-4 py-3 font-semibold text-white"
+                  disabled={pending}
+                  className="press w-full rounded-xl px-4 py-3 font-semibold text-white disabled:opacity-60"
                   style={{ backgroundColor: 'var(--brand)' }}
                 >
-                  Crea task
+                  {pending ? 'Creazione…' : 'Crea task'}
                 </button>
               </form>
             </motion.div>

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
 import { Card, PageHeader, Avatar } from '@/components/ui'
 import { updateRegistrationCode } from '@/app/(app)/actions'
+import { SubmitSpinner } from '@/components/loading-overlay'
 import type { Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -61,6 +62,7 @@ export default async function SettingsPage() {
             Codice condiviso necessario per registrarsi. Cambialo quando vuoi: i nuovi iscritti dovranno usare quello aggiornato.
           </p>
           <form action={updateRegistrationCode} className="flex gap-2">
+            <SubmitSpinner />
             <input name="registration_code" defaultValue={code ?? ''} required className={inputCls} />
             <button className="press rounded-xl px-4 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--brand)' }}>
               Salva

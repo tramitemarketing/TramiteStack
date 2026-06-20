@@ -1,4 +1,5 @@
 import { HeaderSkeleton } from '@/components/skeletons'
+import { CenterSpinner } from '@/components/loading-overlay'
 
 export default function Loading() {
   return (
@@ -8,6 +9,7 @@ export default function Loading() {
         <div className="skeleton h-72 w-full" />
         <div className="skeleton h-72 w-full" />
       </div>
+      <CenterSpinner />
     </div>
   )
 }

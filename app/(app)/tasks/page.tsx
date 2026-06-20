@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireProfile } from '@/lib/auth'
 import { PageHeader, EmptyState } from '@/components/ui'
 import { TaskBoard, type BoardTask } from '@/components/task-board'
 import { CreateTaskButton } from '@/components/create-task'
@@ -12,6 +13,7 @@ type Row = Task & {
 }
 
 export default async function TasksPage() {
+  const me = await requireProfile()
   const supabase = await createClient()
   const [{ data }, { data: projects }, { data: members }] = await Promise.all([
     supabase
@@ -43,7 +45,7 @@ export default async function TasksPage() {
       ) : tasks.length === 0 ? (
         <EmptyState title="Nessun task" hint="Tocca “Crea Task” per iniziare." />
       ) : (
-        <TaskBoard initialTasks={tasks} />
+        <TaskBoard initialTasks={tasks} meId={me.id} />
       )}
     </div>
   )

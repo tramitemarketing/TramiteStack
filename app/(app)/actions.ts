@@ -83,6 +83,29 @@ export async function moveTask(id: string, status: TaskStatus, position: number)
   revalidatePath('/tasks')
 }
 
+// Presa in carico: assegna la task all'utente corrente
+export async function claimTask(formData: FormData) {
+  const supabase = await createClient()
+  const uid = await currentUserId()
+  const id = String(formData.get('id'))
+  if (!uid || !id) return
+  await supabase.from('tasks').update({ assignee_id: uid }).eq('id', id)
+  revalidatePath('/tasks')
+  const projectId = String(formData.get('project_id') ?? '')
+  if (projectId) revalidatePath(`/projects/${projectId}`)
+}
+
+// Lascia la task (rimuove l'assegnatario)
+export async function releaseTask(formData: FormData) {
+  const supabase = await createClient()
+  const id = String(formData.get('id'))
+  if (!id) return
+  await supabase.from('tasks').update({ assignee_id: null }).eq('id', id)
+  revalidatePath('/tasks')
+  const projectId = String(formData.get('project_id') ?? '')
+  if (projectId) revalidatePath(`/projects/${projectId}`)
+}
+
 export async function deleteTask(formData: FormData) {
   const supabase = await createClient()
   const id = String(formData.get('id'))

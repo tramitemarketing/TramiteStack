@@ -14,6 +14,7 @@ import { PROJECT_STATUS_LABEL, type Project, type Task, type Profile } from '@/t
 import { setProjectStatus, deleteProject } from '@/app/(app)/actions'
 import { CreateTaskButton } from '@/components/create-task'
 import { AttachmentsPanel } from '@/components/attachments-panel'
+import { SubmitSpinner } from '@/components/loading-overlay'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +54,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {/* Stato + elimina */}
       <Card className="flex items-center justify-between gap-3 p-3">
         <form action={setProjectStatus} className="flex items-center gap-2">
+          <SubmitSpinner />
           <input type="hidden" name="id" value={p.id} />
           <select name="status" defaultValue={p.status} className={inputCls}>
             {Object.entries(PROJECT_STATUS_LABEL).map(([v, l]) => (
@@ -62,6 +64,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <button className="press rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-semibold text-white">Aggiorna</button>
         </form>
         <form action={deleteProject}>
+          <SubmitSpinner />
           <input type="hidden" name="id" value={p.id} />
           <button className="press flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-red-600 ring-1 ring-red-200" aria-label="Elimina progetto">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">

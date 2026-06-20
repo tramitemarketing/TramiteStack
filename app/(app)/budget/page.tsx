@@ -3,6 +3,7 @@ import { requireProfile } from '@/lib/auth'
 import { Card, PageHeader, EmptyState, Avatar } from '@/components/ui'
 import { formatEuro, formatDate } from '@/lib/utils'
 import { createTransaction, deleteTransaction } from '@/app/(app)/actions'
+import { SubmitSpinner } from '@/components/loading-overlay'
 import type { Transaction, TeamBalance, Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -70,6 +71,7 @@ export default async function BudgetPage() {
         </summary>
         <Card className="mt-2">
           <form action={createTransaction} className="space-y-3">
+            <SubmitSpinner />
             <select name="owner_id" required className={inputCls} defaultValue={me.id}>
               {memberList.map((m) => (
                 <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
@@ -112,6 +114,7 @@ export default async function BudgetPage() {
                     {t.type === 'entrata' ? '+' : '−'} {formatEuro(Number(t.amount))}
                   </span>
                   <form action={deleteTransaction}>
+                    <SubmitSpinner />
                     <input type="hidden" name="id" value={t.id} />
                     <button className="text-slate-300 opacity-0 transition group-hover:opacity-100 hover:text-red-500" aria-label="Elimina">
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">

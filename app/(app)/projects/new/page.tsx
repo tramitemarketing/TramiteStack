@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createProject } from '@/app/(app)/actions'
 import { Card, PageHeader } from '@/components/ui'
+import { SubmitSpinner } from '@/components/loading-overlay'
 import { PROJECT_STATUS_LABEL } from '@/types/database'
 
 const inputCls =
@@ -12,6 +13,7 @@ export default function NewProjectPage() {
       <PageHeader title="Nuovo progetto" />
       <Card>
         <form action={createProject} className="space-y-4">
+          <SubmitSpinner />
           <div>
             <label className="mb-1 block text-sm font-semibold">Titolo *</label>
             <input name="name" required className={inputCls} placeholder="Es. Social media estate" />

@@ -2,6 +2,7 @@ import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, format } f
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader, Card } from '@/components/ui'
 import { CalendarView, type CalItem } from '@/components/calendar-view'
+import { SubmitSpinner } from '@/components/loading-overlay'
 import { createEvent } from '@/app/(app)/actions'
 import type { CalendarEvent, Task, Project } from '@/types/database'
 
@@ -60,6 +61,7 @@ export default async function CalendarPage({
         </summary>
         <Card className="mt-2">
           <form action={createEvent} className="space-y-3">
+            <SubmitSpinner />
             <input name="title" required className={inputCls} placeholder="Titolo evento" />
             <input type="datetime-local" name="starts_at" required className={inputCls} />
             <select name="project_id" className={inputCls} defaultValue="">

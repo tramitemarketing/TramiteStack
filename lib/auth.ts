@@ -27,21 +27,30 @@ export async function requireProfile(): Promise<Profile> {
     'utente'
 
   // Prova con lo username scelto; in caso di collisione, aggiunge un suffisso.
-  let created: Profile | null = null
   for (const candidate of [base, `${base}-${user.id.slice(0, 4)}`]) {
-    const { data } = await supabase
+    const { error } = await supabase
       .from('profiles')
       .upsert({ id: user.id, username: candidate, full_name: candidate }, { onConflict: 'id' })
-      .select('*')
-      .maybeSingle()
-    if (data) {
-      created = data as Profile
-      break
-    }
+    if (!error) break
   }
 
-  if (!created) redirect('/login')
-  return created
+  // Rileggi il profilo (statement separato: la RLS sul RETURNING dell'upsert
+  // può non vedere subito la riga appena creata).
+  const { data: fresh } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+  if (fresh) return fresh as Profile
+
+  // Utente autenticato ma profilo non leggibile: NON rimbalzare al login,
+  // ritorna un profilo minimo così l'app si carica comunque.
+  return {
+    id: user.id,
+    username: base,
+    full_name: base,
+    role: 'member',
+    avatar_url: null,
+    active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as Profile
 }
 
 // Ritorna il profilo o null senza reindirizzare.

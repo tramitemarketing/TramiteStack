@@ -50,7 +50,8 @@ export async function signUp(_prev: unknown, formData: FormData) {
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { username } },
+    // `display_name` collega lo username al Display Name di Supabase.
+    options: { data: { username, display_name: username, full_name: username } },
   })
   if (error) {
     if (error.message.toLowerCase().includes('already')) {
@@ -59,15 +60,7 @@ export async function signUp(_prev: unknown, formData: FormData) {
     return { error: 'Registrazione non riuscita: ' + error.message }
   }
 
-  // Stabilisce la sessione (con conferma email disattivata l'accesso è immediato).
-  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-  if (signInError) {
-    return {
-      error:
-        'Account creato. Se l’accesso non parte, verifica che la conferma email sia disattivata su Supabase.',
-    }
-  }
-
+  // Con la conferma email disattivata, signUp stabilisce già la sessione.
   redirect('/dashboard')
 }
 

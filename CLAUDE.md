@@ -6,8 +6,9 @@ App PWA mobile-first per i dipendenti di TramiteMarketing: task (board drag&drop
 bilancio **personale** per dipendente, progetti con allegati. **Lingua UI: italiano. Valuta: EUR.**
 
 ## Funzionalità chiave (v2)
-- Auth **Login + Register** con "nome collaborazione" (codice in `tstack.app_settings`, verificato da
-  `tstack.check_registration_code` SECURITY DEFINER). Conferma email disattivata su Supabase.
+- Auth **Login + Register** con **username** + "nome collaborazione" (codice in `tstack.app_settings`,
+  verificato da `tstack.check_registration_code` SECURITY DEFINER). Login via email; conferma email
+  disattivata su Supabase. Le persone si mostrano ovunque con `profiles.username` (unico).
 - **Task board** trascinabile (`@dnd-kit`) a 4 stati con update ottimistico + spinner (`components/task-board.tsx`).
 - Priorità **1–5** (`priority_level`) su task e progetti. Assegnatario task = `assignee_id`.
 - **Bilancio personale**: `transactions.owner_id` → vista `tstack.team_balances` (saldo per dipendente, RLS-safe via `security_invoker`).

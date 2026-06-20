@@ -18,8 +18,8 @@ Le migration sono in `supabase/migrations/`:
 
 Per (ri)applicarle: Supabase → **SQL Editor** → incolla il contenuto dei file in ordine → **Run**.
 
-### 2. Disattivare la conferma email (accesso immediato) ⚠️ IMPORTANTE
-Perché la registrazione dia accesso **subito**:
+### 2. Disattivare la conferma email (accesso immediato) ⚠️ OBBLIGATORIO
+Senza questo passo la registrazione **non** dà accesso (il login risulterà "rotto").
 Supabase → **Authentication → Sign In / Providers → Email** → disattiva **"Confirm email"** → salva.
 
 ### 3. Impostare il "nome collaborazione" (codice di registrazione)
@@ -81,8 +81,9 @@ I valori si trovano in **Supabase → Project Settings → API**:
 
 ## D) Uso quotidiano
 
-- **Registrazione:** apri l'app → *Registrati* → Nome, email, password e **nome collaborazione** →
-  accesso immediato. (Senza il codice corretto non si entra.)
+- **Registrazione:** apri l'app → *Registrati* → **username**, email, password e **nome
+  collaborazione** → accesso immediato. L'accesso avviene con **email + password**; lo **username**
+  è il nome con cui ti vedono i colleghi in tutta l'app. (Senza il codice corretto non si entra.)
 - **Home:** il tuo **saldo personale** e i **task di oggi**.
 - **Task:** *Crea Task* (scegli progetto, priorità 1–5, scadenza, a chi è in carico). **Trascina** le
   card tra le 4 colonne per cambiarne lo stato: appare uno **spinner** finché il salvataggio è

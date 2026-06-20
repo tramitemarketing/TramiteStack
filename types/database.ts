@@ -8,6 +8,7 @@ export type TxType = 'entrata' | 'uscita'
 
 export interface Profile {
   id: string
+  username: string | null
   full_name: string
   role: UserRole
   avatar_url: string | null
@@ -110,7 +111,7 @@ export interface Notification {
 
 export interface TeamBalance {
   user_id: string
-  full_name: string
+  username: string | null
   role: UserRole
   total_income: number
   total_expense: number

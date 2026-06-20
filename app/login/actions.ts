@@ -22,13 +22,16 @@ export async function signIn(_prev: unknown, formData: FormData) {
 }
 
 export async function signUp(_prev: unknown, formData: FormData) {
-  const fullName = String(formData.get('full_name') ?? '').trim()
+  const username = String(formData.get('username') ?? '').trim()
   const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
   const code = String(formData.get('code') ?? '').trim()
 
-  if (!fullName || !email || !password || !code) {
+  if (!username || !email || !password || !code) {
     return { error: 'Compila tutti i campi.' }
+  }
+  if (username.length < 3) {
+    return { error: 'Lo username deve avere almeno 3 caratteri.' }
   }
   if (password.length < 6) {
     return { error: 'La password deve avere almeno 6 caratteri.' }
@@ -47,10 +50,22 @@ export async function signUp(_prev: unknown, formData: FormData) {
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: { data: { username } },
   })
   if (error) {
+    if (error.message.toLowerCase().includes('already')) {
+      return { error: 'Esiste già un account con questa email.' }
+    }
     return { error: 'Registrazione non riuscita: ' + error.message }
+  }
+
+  // Stabilisce la sessione (con conferma email disattivata l'accesso è immediato).
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+  if (signInError) {
+    return {
+      error:
+        'Account creato. Se l’accesso non parte, verifica che la conferma email sia disattivata su Supabase.',
+    }
   }
 
   redirect('/dashboard')

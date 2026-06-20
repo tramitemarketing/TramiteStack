@@ -29,7 +29,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={`Ciao ${profile.full_name?.split(' ')[0] || ''} 👋`} subtitle="La tua giornata" />
+      <PageHeader title={`Ciao ${profile.username || ''} 👋`} subtitle="La tua giornata" />
 
       {/* Bilancio personale: solo saldo attuale */}
       <Card className="bg-gradient-to-br from-violet-600 to-cyan-500 text-white ring-0">

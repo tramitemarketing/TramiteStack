@@ -23,8 +23,9 @@ export default function RegisterPage() {
 
         <form action={formAction} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <div>
-            <label htmlFor="full_name" className="mb-1 block text-sm font-semibold text-slate-700">Nome e cognome</label>
-            <input id="full_name" name="full_name" required className={inputCls} placeholder="Mario Rossi" />
+            <label htmlFor="username" className="mb-1 block text-sm font-semibold text-slate-700">Username</label>
+            <input id="username" name="username" required minLength={3} autoCapitalize="none" className={inputCls} placeholder="es. mario.rossi" />
+            <p className="mt-1 text-xs text-slate-400">Con questo nome ti vedranno i colleghi nell’app.</p>
           </div>
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-semibold text-slate-700">Email</label>

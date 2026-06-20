@@ -13,7 +13,7 @@ export function CreateTaskButton({
   defaultProjectId,
 }: {
   projects: { id: string; name: string }[]
-  members: { id: string; full_name: string }[]
+  members: { id: string; username: string | null }[]
   defaultProjectId?: string
 }) {
   const [open, setOpen] = useState(false)
@@ -70,7 +70,7 @@ export function CreateTaskButton({
                 <select name="assignee_id" className={inputCls} defaultValue="">
                   <option value="">In carico a… (nessuno)</option>
                   {members.map((m) => (
-                    <option key={m.id} value={m.id}>{m.full_name || 'Utente'}</option>
+                    <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
                   ))}
                 </select>
                 <button

@@ -12,7 +12,7 @@ const inputCls =
 export default async function SettingsPage() {
   const profile = await requireProfile()
   const supabase = await createClient()
-  const { data } = await supabase.from('profiles').select('*').order('full_name')
+  const { data } = await supabase.from('profiles').select('*').order('username')
   const team = (data as Profile[] | null) ?? []
 
   let code: string | null = null
@@ -28,9 +28,9 @@ export default async function SettingsPage() {
       <Card>
         <h2 className="mb-2 font-bold">Il mio profilo</h2>
         <div className="flex items-center gap-2">
-          <Avatar name={profile.full_name} />
+          <Avatar name={profile.username} />
           <div>
-            <p className="text-sm font-semibold">{profile.full_name || 'Nome non impostato'}</p>
+            <p className="text-sm font-semibold">{profile.username || 'Username non impostato'}</p>
             <p className="text-xs text-slate-400">{profile.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
           </div>
         </div>
@@ -42,9 +42,9 @@ export default async function SettingsPage() {
           {team.map((m) => (
             <Card key={m.id} className="flex items-center justify-between p-3">
               <div className="flex items-center gap-2">
-                <Avatar name={m.full_name} />
+                <Avatar name={m.username} />
                 <div>
-                  <p className="text-sm font-semibold">{m.full_name || 'Utente'}</p>
+                  <p className="text-sm font-semibold">{m.username || 'Utente'}</p>
                   <p className="text-xs text-slate-400">{m.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
                 </div>
               </div>

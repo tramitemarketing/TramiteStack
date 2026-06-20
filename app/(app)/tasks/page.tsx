@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 type Row = Task & {
   projects: { name: string } | null
-  assignee: { full_name: string } | null
+  assignee: { username: string | null } | null
 }
 
 export default async function TasksPage() {
@@ -16,20 +16,20 @@ export default async function TasksPage() {
   const [{ data }, { data: projects }, { data: members }] = await Promise.all([
     supabase
       .from('tasks')
-      .select('*, projects(name), assignee:profiles!assignee_id(full_name)')
+      .select('*, projects(name), assignee:profiles!assignee_id(username)')
       .order('position', { ascending: true }),
     supabase.from('projects').select('id, name').order('name'),
-    supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
+    supabase.from('profiles').select('id, username').eq('active', true).order('username'),
   ])
 
   const rows = (data as Row[] | null) ?? []
   const tasks: BoardTask[] = rows.map((t) => ({
     ...t,
     projectName: t.projects?.name ?? null,
-    assigneeName: t.assignee?.full_name ?? null,
+    assigneeName: t.assignee?.username ?? null,
   }))
   const projList = (projects as Pick<Project, 'id' | 'name'>[] | null) ?? []
-  const memberList = (members as Pick<Profile, 'id' | 'full_name'>[] | null) ?? []
+  const memberList = (members as Pick<Profile, 'id' | 'username'>[] | null) ?? []
 
   return (
     <div className="space-y-4">

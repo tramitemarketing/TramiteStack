@@ -19,21 +19,29 @@ export async function requireProfile(): Promise<Profile> {
 
   if (profile) return profile as Profile
 
-  // Creazione lazy del profilo al primo accesso (riuso utenti esistenti).
-  const fullName =
+  // Creazione lazy del profilo al primo accesso.
+  const base =
+    (user.user_metadata?.username as string | undefined) ||
     (user.user_metadata?.full_name as string | undefined) ||
-    (user.user_metadata?.name as string | undefined) ||
     user.email?.split('@')[0] ||
-    'Utente'
+    'utente'
 
-  const { data: created } = await supabase
-    .from('profiles')
-    .upsert({ id: user.id, full_name: fullName }, { onConflict: 'id' })
-    .select('*')
-    .single()
+  // Prova con lo username scelto; in caso di collisione, aggiunge un suffisso.
+  let created: Profile | null = null
+  for (const candidate of [base, `${base}-${user.id.slice(0, 4)}`]) {
+    const { data } = await supabase
+      .from('profiles')
+      .upsert({ id: user.id, username: candidate, full_name: candidate }, { onConflict: 'id' })
+      .select('*')
+      .maybeSingle()
+    if (data) {
+      created = data as Profile
+      break
+    }
+  }
 
   if (!created) redirect('/login')
-  return created as Profile
+  return created
 }
 
 // Ritorna il profilo o null senza reindirizzare.

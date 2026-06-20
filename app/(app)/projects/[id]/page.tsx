@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic'
 const inputCls =
   'rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm outline-none focus:border-brand'
 
-type TaskRow = Task & { assignee: { full_name: string } | null }
+type TaskRow = Task & { assignee: { username: string | null } | null }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -33,13 +33,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const [{ data: tasks }, { data: members }] = await Promise.all([
     supabase
       .from('tasks')
-      .select('*, assignee:profiles!assignee_id(full_name)')
+      .select('*, assignee:profiles!assignee_id(username)')
       .eq('project_id', id)
       .order('position'),
-    supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
+    supabase.from('profiles').select('id, username').eq('active', true).order('username'),
   ])
   const taskRows = (tasks as TaskRow[] | null) ?? []
-  const memberList = (members as Pick<Profile, 'id' | 'full_name'>[] | null) ?? []
+  const memberList = (members as Pick<Profile, 'id' | 'username'>[] | null) ?? []
 
   return (
     <div className="space-y-5">
@@ -92,9 +92,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   <PriorityPips level={t.priority_level} />
                   <div className="flex items-center gap-2">
                     {t.due_date && <span className="text-xs text-slate-400">{formatDate(t.due_date, 'd MMM')}</span>}
-                    {t.assignee?.full_name && (
+                    {t.assignee?.username && (
                       <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Avatar name={t.assignee.full_name} /> {t.assignee.full_name.split(' ')[0]}
+                        <Avatar name={t.assignee.username} /> {t.assignee.username}
                       </span>
                     )}
                   </div>

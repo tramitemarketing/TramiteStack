@@ -9,8 +9,9 @@ collaboratore e **progetti** con allegati.
 
 ## Funzionalità (v2)
 
-- 🔐 **Login + Registrazione** con **"nome collaborazione"**: un codice condiviso (modificabile nel
-  DB) che consente l'iscrizione solo ai veri dipendenti. Accesso immediato.
+- 🔐 **Login + Registrazione** con **username** e **"nome collaborazione"**: un codice condiviso
+  (modificabile nel DB) che consente l'iscrizione solo ai veri dipendenti. Accesso con email +
+  password; le persone sono identificate ovunque dallo **username**. Accesso immediato.
 - 🏠 **Home**: saldo personale attuale + task in scadenza oggi.
 - ✅ **Task**: board **trascinabile** su 4 colonne (Da fare / In corso / In revisione / Completato)
   con spostamento ottimistico e **spinner** durante il salvataggio; priorità **1–5**, scadenza,

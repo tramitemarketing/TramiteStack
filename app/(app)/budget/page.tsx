@@ -10,25 +10,25 @@ export const dynamic = 'force-dynamic'
 const inputCls =
   'w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-violet-200'
 
-type TxRow = Transaction & { owner: { full_name: string } | null }
+type TxRow = Transaction & { owner: { username: string | null } | null }
 
 export default async function BudgetPage() {
   const me = await requireProfile()
   const supabase = await createClient()
 
   const [{ data: balances }, { data: txs }, { data: members }] = await Promise.all([
-    supabase.from('team_balances').select('*').order('full_name'),
+    supabase.from('team_balances').select('*').order('username'),
     supabase
       .from('transactions')
-      .select('*, owner:profiles!owner_id(full_name)')
+      .select('*, owner:profiles!owner_id(username)')
       .order('occurred_on', { ascending: false })
       .limit(30),
-    supabase.from('profiles').select('id, full_name').eq('active', true).order('full_name'),
+    supabase.from('profiles').select('id, username').eq('active', true).order('username'),
   ])
 
   const team = (balances as TeamBalance[] | null) ?? []
   const txRows = (txs as TxRow[] | null) ?? []
-  const memberList = (members as Pick<Profile, 'id' | 'full_name'>[] | null) ?? []
+  const memberList = (members as Pick<Profile, 'id' | 'username'>[] | null) ?? []
   const totale = team.reduce((s, t) => s + Number(t.balance), 0)
 
   return (
@@ -43,8 +43,8 @@ export default async function BudgetPage() {
           team.map((t) => (
             <Card key={t.user_id} className="p-3">
               <div className="flex items-center gap-2">
-                <Avatar name={t.full_name} />
-                <p className="truncate text-sm font-semibold">{t.full_name || 'Utente'}</p>
+                <Avatar name={t.username} />
+                <p className="truncate text-sm font-semibold">{t.username || 'Utente'}</p>
               </div>
               <p className={'mt-2 text-xl font-extrabold ' + (Number(t.balance) >= 0 ? 'text-slate-900' : 'text-red-600')}>
                 {formatEuro(Number(t.balance))}
@@ -72,7 +72,7 @@ export default async function BudgetPage() {
           <form action={createTransaction} className="space-y-3">
             <select name="owner_id" required className={inputCls} defaultValue={me.id}>
               {memberList.map((m) => (
-                <option key={m.id} value={m.id}>{m.full_name || 'Utente'}</option>
+                <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
               ))}
             </select>
             <div className="grid grid-cols-2 gap-3">
@@ -105,7 +105,7 @@ export default async function BudgetPage() {
               <div key={t.id} className="group flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-slate-200">
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{t.description || t.category || 'Movimento'}</p>
-                  <p className="text-xs text-slate-400">{t.owner?.full_name ?? '—'} · {formatDate(t.occurred_on)}</p>
+                  <p className="text-xs text-slate-400">{t.owner?.username ?? '—'} · {formatDate(t.occurred_on)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={t.type === 'entrata' ? 'font-bold text-emerald-600' : 'font-bold text-red-600'}>

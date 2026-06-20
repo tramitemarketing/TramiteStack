@@ -11,20 +11,31 @@ export async function requireProfile(): Promise<Profile> {
 
   if (!user) redirect('/login')
 
+  // Username preferito dai metadati dell'utente.
+  const desiredUsername =
+    (user.user_metadata?.username as string | undefined) ||
+    (user.user_metadata?.display_name as string | undefined) ||
+    (user.user_metadata?.full_name as string | undefined) ||
+    user.email?.split('@')[0] ||
+    'utente'
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .maybeSingle()
 
-  if (profile) return profile as Profile
+  if (profile) {
+    // Auto-riparazione: se manca lo username, lo reimposta dai metadati.
+    if (!(profile as Profile).username) {
+      await supabase.from('profiles').update({ username: desiredUsername }).eq('id', user.id)
+      return { ...(profile as Profile), username: desiredUsername }
+    }
+    return profile as Profile
+  }
 
   // Creazione lazy del profilo al primo accesso.
-  const base =
-    (user.user_metadata?.username as string | undefined) ||
-    (user.user_metadata?.full_name as string | undefined) ||
-    user.email?.split('@')[0] ||
-    'utente'
+  const base = desiredUsername
 
   // Prova con lo username scelto; in caso di collisione, aggiunge un suffisso.
   for (const candidate of [base, `${base}-${user.id.slice(0, 4)}`]) {

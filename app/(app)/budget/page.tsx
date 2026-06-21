@@ -1,19 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
 import { Card, EmptyState, Avatar } from '@/components/ui'
-import { AutoScrollDetails } from '@/components/auto-scroll-details'
-import { SubmitButton, SubmitIcon } from '@/components/submit-button'
+import { SubmitIcon } from '@/components/submit-button'
+import { AddTransaction } from '@/components/add-transaction'
 import { IconUp, IconDown, IconTrash } from '@/components/icons'
 import { EmptyBudget } from '@/components/illustrations'
 import { formatEuro, formatDate, cn } from '@/lib/utils'
-import { createTransaction, deleteTransaction } from '@/app/(app)/actions'
+import { deleteTransaction } from '@/app/(app)/actions'
 import type { Transaction, TeamBalance, Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
-
-const inputCls =
-  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
-const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
 
 type TxRow = Transaction & { owner: { username: string | null } | null }
 
@@ -38,8 +34,14 @@ export default async function BudgetPage() {
 
   return (
     <div className="space-y-5">
-      {/* Header navy con saldo totale team */}
-      <div className="rounded-2xl p-[18px] text-white" style={{ background: 'linear-gradient(150deg, #1660A3, #0A2E4D)' }}>
+      {/* Header navy a tutta larghezza, attaccato in alto */}
+      <div
+        className="-mx-4 -mt-5 px-4 pb-5 text-white"
+        style={{
+          background: 'linear-gradient(150deg, #1660A3, #0A2E4D)',
+          paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)',
+        }}
+      >
         <div className="flex items-center justify-between">
           <h1 className="font-display text-[22px] font-extrabold tracking-tight">Bilancio</h1>
           <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-[#9DC2EC]">Team</span>
@@ -56,7 +58,7 @@ export default async function BudgetPage() {
           team.map((t) => (
             <Card key={t.user_id} className="p-3">
               <div className="flex items-center gap-2">
-                <Avatar name={t.username} size={24} />
+                <Avatar name={t.username} size={24} colorKey={t.user_id} />
                 <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.username || 'Utente'}</p>
               </div>
               <p className={cn('mt-2 font-display text-lg font-extrabold tnum', Number(t.balance) >= 0 ? 'text-ok' : 'text-danger')}>
@@ -70,49 +72,12 @@ export default async function BudgetPage() {
         )}
       </div>
 
-      {/* Aggiungi movimento */}
-      <AutoScrollDetails summary="+ Aggiungi entrata / uscita">
-        <Card className="mt-2">
-          <form action={createTransaction} className="space-y-3">
-            <div>
-              <label className={labelCls}>Dipendente <span className="text-danger">*</span></label>
-              <select name="owner_id" required className={inputCls} defaultValue={me.id}>
-                {memberList.map((m) => (
-                  <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Tipo</label>
-                <select name="type" className={inputCls} defaultValue="entrata">
-                  <option value="entrata">Entrata</option>
-                  <option value="uscita">Uscita</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Importo € <span className="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" name="amount" required className={inputCls} placeholder="0,00" />
-              </div>
-            </div>
-            <div>
-              <label className={labelCls}>Descrizione</label>
-              <input name="description" className={inputCls} placeholder="Es. Pagamento cliente Rossi" />
-            </div>
-            <div>
-              <label className={labelCls}>Data</label>
-              <input type="date" name="occurred_on" className={inputCls} defaultValue={new Date().toISOString().slice(0, 10)} />
-            </div>
-            <SubmitButton pendingLabel="Registrazione…" className="w-full rounded-[10px] px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
-              Registra movimento
-            </SubmitButton>
-          </form>
-        </Card>
-      </AutoScrollDetails>
-
       {/* Ultimi movimenti */}
       <section>
-        <h2 className="mb-2 font-display font-bold text-[#1A1F2B]">Ultimi movimenti</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display font-bold text-[#1A1F2B]">Ultimi movimenti</h2>
+          <AddTransaction members={memberList} defaultOwner={me.id} />
+        </div>
         {txRows.length === 0 ? (
           <EmptyState title="Nessun movimento" hint="Registra entrate e uscite." illustration={<EmptyBudget />} />
         ) : (

@@ -26,6 +26,7 @@ import {
 import { PriorityBadge, Avatar } from '@/components/ui'
 import { SubmitIcon } from '@/components/submit-button'
 import { EditTask } from '@/components/edit-task'
+import { CreateTaskButton } from '@/components/create-task'
 import { IconTrash, IconFilter, IconCheck } from '@/components/icons'
 
 export type BoardTask = Task & {
@@ -106,7 +107,7 @@ function TaskCard({
           <PriorityBadge level={task.priority_level} />
           {task.assigneeName ? (
             <span className="flex min-w-0 items-center gap-1.5">
-              <Avatar name={task.assigneeName} size={22} />
+              <Avatar name={task.assigneeName} size={22} colorKey={task.assignee_id} />
               <span className="truncate text-[11px] font-semibold text-[#5A6473]">{task.assigneeName}</span>
             </span>
           ) : (
@@ -155,10 +156,12 @@ export function TaskBoard({
   initialTasks,
   meId,
   members,
+  projects: projectOptions,
 }: {
   initialTasks: BoardTask[]
   meId: string
   members: Member[]
+  projects: { id: string; name: string }[]
 }) {
   const [tasks, setTasks] = useState<BoardTask[]>(initialTasks)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -220,25 +223,24 @@ export function TaskBoard({
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      {/* Barra filtri */}
-      <div className="mb-3 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowFilters((v) => !v)}
-          className={cn(
-            'press flex h-9 items-center gap-1.5 rounded-[10px] border px-3 text-[13px] font-bold transition',
-            filtersActive ? 'border-transparent bg-brand-50 text-brand' : 'border-[#E0E4EB] bg-white text-[#3E4757]',
-          )}
-        >
-          <IconFilter size={17} />
-          Filtra
-          {filtersActive && <span className="ml-0.5 h-2 w-2 rounded-full" style={{ background: 'var(--accent)' }} />}
-        </button>
-        {filtersActive && (
-          <button type="button" onClick={() => { setMineOnly(false); setProjectFilter('') }} className="press text-[12px] font-semibold text-[#9CA5B3]">
-            Azzera
+      {/* Header: Task · filtro · Nuovo */}
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h1 className="font-display text-[26px] font-extrabold leading-none tracking-tight text-navy">Task</h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-label="Filtra"
+            className={cn(
+              'press relative flex h-9 w-9 items-center justify-center rounded-[10px] border transition',
+              filtersActive ? 'border-transparent bg-brand-50 text-brand' : 'border-[#E0E4EB] bg-white text-[#3E4757]',
+            )}
+          >
+            <IconFilter size={18} />
+            {filtersActive && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white" style={{ background: 'var(--accent)' }} />}
           </button>
-        )}
+          <CreateTaskButton projects={projectOptions} members={members} />
+        </div>
       </div>
 
       {showFilters && (
@@ -263,10 +265,15 @@ export function TaskBoard({
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+          {filtersActive && (
+            <button type="button" onClick={() => { setMineOnly(false); setProjectFilter('') }} className="press ml-auto text-[12px] font-semibold text-[#9CA5B3]">
+              Azzera
+            </button>
+          )}
         </div>
       )}
 
-      <div className="no-scrollbar relative left-1/2 w-screen -translate-x-1/2 overflow-x-auto px-4">
+      <div data-no-swipe className="no-scrollbar relative left-1/2 w-screen -translate-x-1/2 overflow-x-auto px-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
           {TASK_STATUS_ORDER.map((status) => (
             <Column

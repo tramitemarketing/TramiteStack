@@ -13,9 +13,9 @@ export function HeaderAccount({ username }: { username: string | null }) {
   const router = useRouter()
   const ref = useRef<HTMLDivElement>(null)
 
-  function goSettings() {
+  function go(path: string) {
     setOpen(false)
-    startTransition(() => router.push('/settings'))
+    startTransition(() => router.push(path))
   }
 
   useEffect(() => {
@@ -38,7 +38,10 @@ export function HeaderAccount({ username }: { username: string | null }) {
             <p className="text-[11px] font-semibold text-[#9CA5B3]">Accesso come</p>
             <p className="truncate text-sm font-bold text-[#1A1F2B]">{username || 'Utente'}</p>
           </div>
-          <button onClick={goSettings} className="block w-full px-3.5 py-2.5 text-left text-sm font-semibold text-[#3E4757] hover:bg-[#F7F8FA]">
+          <button onClick={() => go('/me')} className="block w-full px-3.5 py-2.5 text-left text-sm font-semibold text-[#3E4757] hover:bg-[#F7F8FA]">
+            Area personale
+          </button>
+          <button onClick={() => go('/settings')} className="block w-full px-3.5 py-2.5 text-left text-sm font-semibold text-[#3E4757] hover:bg-[#F7F8FA]">
             Impostazioni
           </button>
           <form action={signOut}>

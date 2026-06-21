@@ -146,10 +146,10 @@ export function PriorityBadge({ level }: { level: number }) {
   )
 }
 
-// Avatar a iniziali con colore deterministico dal nome
-const AVATAR_COLORS = ['#0F4C81', '#7C5CD6', '#1F8A5B', '#2A78C2', '#C8932B', '#D8553F']
+// Avatar a iniziali con colore deterministico (preferisce un id stabile)
+const AVATAR_COLORS = ['#0F4C81', '#7C5CD6', '#1F8A5B', '#2A78C2', '#C8932B', '#D8553F', '#0E7C86', '#B4458E']
 
-export function Avatar({ name, size = 24 }: { name: string | null | undefined; size?: number }) {
+export function Avatar({ name, size = 24, colorKey }: { name: string | null | undefined; size?: number; colorKey?: string | null }) {
   const label = name || '?'
   const initials = label
     .split(' ')
@@ -157,8 +157,9 @@ export function Avatar({ name, size = 24 }: { name: string | null | undefined; s
     .slice(0, 2)
     .join('')
     .toUpperCase()
+  const key = colorKey || label
   let hash = 0
-  for (let i = 0; i < label.length; i++) hash = (hash * 31 + label.charCodeAt(i)) >>> 0
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0
   const bg = AVATAR_COLORS[hash % AVATAR_COLORS.length]
   return (
     <span

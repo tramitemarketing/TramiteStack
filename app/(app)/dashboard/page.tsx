@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
 import { Card, TaskStatusBadge, EmptyState } from '@/components/ui'
 import { HeaderAccount } from '@/components/header-account'
+import { DbStatus } from '@/components/db-status'
 import { IconEuro } from '@/components/icons'
 import { EmptyTasks } from '@/components/illustrations'
 import { formatEuro, formatDate, cn } from '@/lib/utils'
@@ -41,7 +42,10 @@ export default async function DashboardPage() {
             Ciao {profile.username || ''} 👋
           </h1>
         </div>
-        <HeaderAccount username={profile.username} />
+        <div className="flex items-center gap-2">
+          <DbStatus />
+          <HeaderAccount username={profile.username} />
+        </div>
       </header>
 
       {/* Saldo personale (pannello navy) */}

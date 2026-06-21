@@ -1,17 +1,9 @@
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, format } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
-import { Card } from '@/components/ui'
 import { CalendarView, type CalItem } from '@/components/calendar-view'
-import { SubmitButton } from '@/components/submit-button'
-import { AutoScrollDetails } from '@/components/auto-scroll-details'
-import { createEvent } from '@/app/(app)/actions'
 import type { CalendarEvent, Task, Project } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
-
-const inputCls =
-  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
-const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
 
 export default async function CalendarPage({
   searchParams,
@@ -53,35 +45,7 @@ export default async function CalendarPage({
 
   return (
     <div className="space-y-5">
-      <CalendarView items={items} off={off} />
-
-      <AutoScrollDetails summary="+ Nuovo evento">
-        <Card className="mt-2">
-          <form action={createEvent} className="space-y-3">
-            <div>
-              <label className={labelCls}>Titolo <span className="text-danger">*</span></label>
-              <input name="title" required className={inputCls} placeholder="Titolo evento" />
-            </div>
-            <div>
-              <label className={labelCls}>Data e ora <span className="text-danger">*</span></label>
-              <input type="datetime-local" name="starts_at" required className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Progetto</label>
-              <select name="project_id" className={inputCls} defaultValue="">
-                <option value="">— Nessun progetto —</option>
-                {projects2.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-            <input name="description" className={inputCls} placeholder="Note (facoltative)" />
-            <SubmitButton pendingLabel="Aggiunta…" className="w-full rounded-[10px] px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
-              Aggiungi evento
-            </SubmitButton>
-          </form>
-        </Card>
-      </AutoScrollDetails>
+      <CalendarView items={items} off={off} projects={projects2} />
     </div>
   )
 }

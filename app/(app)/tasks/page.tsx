@@ -2,8 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
 import { PageHeader, EmptyState } from '@/components/ui'
 import { TaskBoard, type BoardTask } from '@/components/task-board'
-import { CreateTaskButton } from '@/components/create-task'
-import { EmptyTasks, EmptyProjects } from '@/components/illustrations'
+import { EmptyProjects } from '@/components/illustrations'
 import type { Task, Project, Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -34,20 +33,15 @@ export default async function TasksPage() {
   const projList = (projects as Pick<Project, 'id' | 'name'>[] | null) ?? []
   const memberList = (members as Pick<Profile, 'id' | 'username'>[] | null) ?? []
 
-  return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Task"
-        subtitle={`${tasks.length} totali`}
-        action={<CreateTaskButton projects={projList} members={memberList} />}
-      />
-      {projList.length === 0 ? (
-        <EmptyState title="Nessun progetto" hint="Crea prima un progetto, poi i task." illustration={<EmptyProjects />} />
-      ) : tasks.length === 0 ? (
-        <EmptyState title="Nessun task" hint="Tocca “Nuovo” per iniziare." illustration={<EmptyTasks />} />
-      ) : (
-        <TaskBoard initialTasks={tasks} meId={me.id} members={memberList} />
-      )}
-    </div>
-  )
+  // Senza progetti non si possono creare task: mostra lo stato vuoto dedicato.
+  if (projList.length === 0) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="Task" />
+        <EmptyState title="Nessun progetto" hint="Crea prima un progetto, poi le task." illustration={<EmptyProjects />} />
+      </div>
+    )
+  }
+
+  return <TaskBoard initialTasks={tasks} meId={me.id} members={memberList} projects={projList} />
 }

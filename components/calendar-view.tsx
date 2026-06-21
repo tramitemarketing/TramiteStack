@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval,
@@ -14,6 +14,7 @@ import { SubmitIcon } from '@/components/submit-button'
 import { CenterSpinner } from '@/components/loading-overlay'
 import { IconChevronLeft, IconChevronRight, IconTrash } from '@/components/icons'
 import { EmptyCalendar } from '@/components/illustrations'
+import { AddEvent } from '@/components/add-event'
 
 export type CalItem = {
   key: string
@@ -34,13 +35,29 @@ const KIND_LABEL: Record<CalItem['kind'], string> = {
   progetto: 'Consegna progetto',
 }
 
-export function CalendarView({ items, off }: { items: CalItem[]; off: number }) {
+export function CalendarView({
+  items,
+  off,
+  projects,
+}: {
+  items: CalItem[]
+  off: number
+  projects: { id: string; name: string }[]
+}) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const month = addMonths(new Date(), off)
   const [selected, setSelected] = useState<string | null>(format(new Date(), 'yyyy-MM-dd'))
 
   const goTo = (n: number) => startTransition(() => router.push(`/calendar?off=${n}`))
+
+  // Swipe orizzontale per cambiare mese
+  const touchX = useRef(0)
+  function onTouchStart(e: React.TouchEvent) { touchX.current = e.changedTouches[0].clientX }
+  function onTouchEnd(e: React.TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchX.current
+    if (Math.abs(dx) > 60) goTo(dx < 0 ? off + 1 : off - 1)
+  }
 
   const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 1 })
   const gridEnd = endOfWeek(endOfMonth(month), { weekStartsOn: 1 })
@@ -55,17 +72,14 @@ export function CalendarView({ items, off }: { items: CalItem[]; off: number }) 
         <button onClick={() => goTo(off - 1)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese precedente">
           <IconChevronLeft size={18} />
         </button>
-        <div className="text-center">
-          <p className="font-display text-lg font-extrabold capitalize text-navy">{format(month, 'MMMM yyyy', { locale: it })}</p>
-          <button onClick={() => goTo(0)} className="press text-[11px] font-bold text-brand">Oggi</button>
-        </div>
+        <p className="font-display text-lg font-extrabold capitalize text-navy">{format(month, 'MMMM yyyy', { locale: it })}</p>
         <button onClick={() => goTo(off + 1)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese successivo">
           <IconChevronRight size={18} />
         </button>
       </div>
 
-      {/* Griglia mese */}
-      <div className="rounded-2xl bg-white p-3 ring-1 ring-[#E0E4EB]">
+      {/* Griglia mese (swipe per cambiare mese) */}
+      <div data-no-swipe className="rounded-2xl bg-white p-3 ring-1 ring-[#E0E4EB]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#9CA5B3]">
           {['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((d, i) => <div key={i}>{d}</div>)}
         </div>
@@ -101,9 +115,12 @@ export function CalendarView({ items, off }: { items: CalItem[]; off: number }) 
 
       {/* Dettaglio giorno */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white p-4 ring-1 ring-[#E0E4EB]">
-        <p className="mb-2.5 font-display text-sm font-bold capitalize text-[#1A1F2B]">
-          {selected ? format(new Date(selected), 'EEEE d MMMM', { locale: it }) : 'Seleziona un giorno'}
-        </p>
+        <div className="mb-2.5 flex items-center justify-between gap-2">
+          <p className="font-display text-sm font-bold capitalize text-[#1A1F2B]">
+            {selected ? format(new Date(selected), 'EEEE d MMMM', { locale: it }) : 'Seleziona un giorno'}
+          </p>
+          <AddEvent projects={projects} defaultDate={selected} />
+        </div>
         {selectedItems.length === 0 ? (
           <EmptyState />
         ) : (

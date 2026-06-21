@@ -12,6 +12,7 @@ export interface Profile {
   full_name: string
   role: UserRole
   avatar_url: string | null
+  color: string | null
   active: boolean
   created_at: string
   updated_at: string
@@ -112,6 +113,7 @@ export interface Notification {
 export interface TeamBalance {
   user_id: string
   username: string | null
+  color: string | null
   role: UserRole
   total_income: number
   total_expense: number

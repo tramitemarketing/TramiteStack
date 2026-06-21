@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui'
 import { CenterSpinner } from '@/components/loading-overlay'
 
 // Avatar con menu rapido (Impostazioni + Esci).
-export function HeaderAccount({ username }: { username: string | null }) {
+export function HeaderAccount({ username, color }: { username: string | null; color?: string | null }) {
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const router = useRouter()
@@ -30,7 +30,7 @@ export function HeaderAccount({ username }: { username: string | null }) {
     <div className="relative" ref={ref}>
       {pending && <CenterSpinner />}
       <button onClick={() => setOpen((v) => !v)} className="press rounded-full" aria-label="Account">
-        <Avatar name={username} size={36} />
+        <Avatar name={username} size={36} color={color} />
       </button>
       {open && (
         <div className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl border border-[#E0E4EB] bg-white shadow-lg">

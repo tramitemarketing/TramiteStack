@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { pickMemberColor } from '@/lib/auth'
 
 export async function signIn(_prev: unknown, formData: FormData) {
   const email = String(formData.get('email') ?? '').trim()
@@ -67,9 +68,10 @@ export async function signUp(_prev: unknown, formData: FormData) {
   // il primo caricamento (fallback: creazione lazy in requireProfile).
   const newUserId = signUpData.user?.id
   if (newUserId) {
+    const color = await pickMemberColor(supabase)
     await supabase
       .from('profiles')
-      .upsert({ id: newUserId, username, full_name: username }, { onConflict: 'id' })
+      .upsert({ id: newUserId, username, full_name: username, color }, { onConflict: 'id' })
   }
 
   // Con la conferma email disattivata, signUp stabilisce già la sessione.

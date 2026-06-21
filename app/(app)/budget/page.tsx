@@ -58,7 +58,7 @@ export default async function BudgetPage() {
           team.map((t) => (
             <Card key={t.user_id} className="p-3">
               <div className="flex items-center gap-2">
-                <Avatar name={t.username} size={24} colorKey={t.user_id} />
+                <Avatar name={t.username} size={24} color={t.color} />
                 <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.username || 'Utente'}</p>
               </div>
               <p className={cn('mt-2 font-display text-lg font-extrabold tnum', Number(t.balance) >= 0 ? 'text-ok' : 'text-danger')}>

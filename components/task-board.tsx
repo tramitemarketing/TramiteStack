@@ -32,6 +32,7 @@ import { IconTrash, IconFilter, IconCheck } from '@/components/icons'
 export type BoardTask = Task & {
   projectName: string | null
   assigneeName: string | null
+  assigneeColor: string | null
 }
 
 type Member = { id: string; username: string | null }
@@ -107,7 +108,7 @@ function TaskCard({
           <PriorityBadge level={task.priority_level} />
           {task.assigneeName ? (
             <span className="flex min-w-0 items-center gap-1.5">
-              <Avatar name={task.assigneeName} size={22} colorKey={task.assignee_id} />
+              <Avatar name={task.assigneeName} size={22} color={task.assigneeColor} />
               <span className="truncate text-[11px] font-semibold text-[#5A6473]">{task.assigneeName}</span>
             </span>
           ) : (

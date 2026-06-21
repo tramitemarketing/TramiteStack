@@ -90,7 +90,7 @@ export default async function PersonalAreaPage() {
 
       {/* Profilo */}
       <Card className="flex items-center gap-3">
-        <Avatar name={me.username} size={48} colorKey={me.id} />
+        <Avatar name={me.username} size={48} color={me.color} />
         <div className="min-w-0">
           <p className="font-display text-lg font-bold text-[#1A1F2B]">{me.username || 'Utente'}</p>
           <p className="text-xs font-semibold text-[#9CA5B3]">

@@ -29,7 +29,7 @@ export default async function SettingsPage() {
       <Card>
         <h2 className="mb-2 font-bold">Il mio profilo</h2>
         <div className="flex items-center gap-2">
-          <Avatar name={profile.username} />
+          <Avatar name={profile.username} color={profile.color} />
           <div>
             <p className="text-sm font-semibold">{profile.username || 'Username non impostato'}</p>
             <p className="text-xs text-slate-400">{profile.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
@@ -43,7 +43,7 @@ export default async function SettingsPage() {
           {team.map((m) => (
             <Card key={m.id} className="flex items-center justify-between p-3">
               <div className="flex items-center gap-2">
-                <Avatar name={m.username} />
+                <Avatar name={m.username} color={m.color} />
                 <div>
                   <p className="text-sm font-semibold">{m.username || 'Utente'}</p>
                   <p className="text-xs text-slate-400">{m.role === 'admin' ? 'Amministratore' : 'Membro'}</p>

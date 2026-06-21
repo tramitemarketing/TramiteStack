@@ -2,6 +2,20 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Profile } from '@/types/database'
 
+type DbClient = Awaited<ReturnType<typeof createClient>>
+
+// Palette identità dei membri (un colore distinto per persona).
+export const MEMBER_PALETTE = ['#0F4C81', '#7C5CD6', '#1F8A5B', '#2A78C2', '#C8932B', '#D8553F', '#0E7C86', '#B4458E']
+
+// Sceglie un colore non ancora usato (se possibile) tra i membri.
+export async function pickMemberColor(supabase: DbClient): Promise<string> {
+  const { data } = await supabase.from('profiles').select('color')
+  const used = new Set(((data as { color: string | null }[] | null) ?? []).map((r) => r.color).filter(Boolean))
+  const free = MEMBER_PALETTE.filter((c) => !used.has(c))
+  const pool = free.length ? free : MEMBER_PALETTE
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
 // Ritorna il profilo dell'utente corrente o reindirizza al login.
 export async function requireProfile(): Promise<Profile> {
   const supabase = await createClient()
@@ -26,22 +40,27 @@ export async function requireProfile(): Promise<Profile> {
     .maybeSingle()
 
   if (profile) {
-    // Auto-riparazione: se manca lo username, lo reimposta dai metadati.
-    if (!(profile as Profile).username) {
-      await supabase.from('profiles').update({ username: desiredUsername }).eq('id', user.id)
-      return { ...(profile as Profile), username: desiredUsername }
+    const p = profile as Profile
+    const patch: Partial<Profile> = {}
+    // Auto-riparazione: username e colore mancanti.
+    if (!p.username) patch.username = desiredUsername
+    if (!p.color) patch.color = await pickMemberColor(supabase)
+    if (Object.keys(patch).length) {
+      await supabase.from('profiles').update(patch).eq('id', user.id)
+      return { ...p, ...patch }
     }
-    return profile as Profile
+    return p
   }
 
   // Creazione lazy del profilo al primo accesso.
   const base = desiredUsername
+  const color = await pickMemberColor(supabase)
 
   // Prova con lo username scelto; in caso di collisione, aggiunge un suffisso.
   for (const candidate of [base, `${base}-${user.id.slice(0, 4)}`]) {
     const { error } = await supabase
       .from('profiles')
-      .upsert({ id: user.id, username: candidate, full_name: candidate }, { onConflict: 'id' })
+      .upsert({ id: user.id, username: candidate, full_name: candidate, color }, { onConflict: 'id' })
     if (!error) break
   }
 
@@ -58,6 +77,7 @@ export async function requireProfile(): Promise<Profile> {
     full_name: base,
     role: 'member',
     avatar_url: null,
+    color: null,
     active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

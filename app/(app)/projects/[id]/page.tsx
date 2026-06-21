@@ -22,7 +22,7 @@ import { IconBack, IconTrash, IconClock } from '@/components/icons'
 
 export const dynamic = 'force-dynamic'
 
-type TaskRow = Task & { assignee: { username: string | null } | null }
+type TaskRow = Task & { assignee: { username: string | null; color: string | null } | null }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -35,7 +35,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const [{ data: tasks }, { data: members }] = await Promise.all([
     supabase
       .from('tasks')
-      .select('*, assignee:profiles!assignee_id(username)')
+      .select('*, assignee:profiles!assignee_id(username, color)')
       .eq('project_id', id)
       .order('position'),
     supabase.from('profiles').select('id, username').eq('active', true).order('username'),
@@ -104,7 +104,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                     {t.due_date && <span className="text-[11px] font-semibold text-[#9CA5B3]">{formatDate(t.due_date, 'd MMM')}</span>}
                     {t.assignee?.username && (
                       <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5A6473]">
-                        <Avatar name={t.assignee.username} size={20} /> {t.assignee.username}
+                        <Avatar name={t.assignee.username} size={20} color={t.assignee.color} /> {t.assignee.username}
                       </span>
                     )}
                   </div>

@@ -44,7 +44,7 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <DbStatus />
-          <HeaderAccount username={profile.username} />
+          <HeaderAccount username={profile.username} color={profile.color} />
         </div>
       </header>
 

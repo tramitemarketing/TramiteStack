@@ -11,7 +11,6 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { deleteEvent } from '@/app/(app)/actions'
 import { SubmitIcon } from '@/components/submit-button'
-import { CenterSpinner } from '@/components/loading-overlay'
 import { IconChevronLeft, IconChevronRight, IconTrash } from '@/components/icons'
 import { EmptyCalendar } from '@/components/illustrations'
 import { AddEvent } from '@/components/add-event'
@@ -66,7 +65,6 @@ export function CalendarView({
 
   return (
     <div className="space-y-4">
-      {pending && <CenterSpinner />}
       {/* Header mese */}
       <div className="flex items-center justify-between">
         <button onClick={() => goTo(off - 1)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese precedente">
@@ -78,7 +76,10 @@ export function CalendarView({
         </button>
       </div>
 
-      {/* Griglia mese (swipe per cambiare mese) */}
+      {/* Griglia mese (swipe per cambiare mese) — skeleton durante il cambio mese */}
+      {pending ? (
+        <MonthGridSkeleton />
+      ) : (
       <div data-no-swipe className="rounded-2xl bg-white p-3 ring-1 ring-[#E0E4EB]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#9CA5B3]">
           {['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((d, i) => <div key={i}>{d}</div>)}
@@ -112,6 +113,7 @@ export function CalendarView({
           })}
         </div>
       </div>
+      )}
 
       {/* Dettaglio giorno */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white p-4 ring-1 ring-[#E0E4EB]">
@@ -154,6 +156,22 @@ function EmptyState() {
     <div className="flex flex-col items-center gap-2 py-3 text-center">
       <EmptyCalendar />
       <p className="text-sm font-semibold text-[#9CA5B3]">Niente in programma.</p>
+    </div>
+  )
+}
+
+// Skeleton della griglia mese (mostrato durante il cambio mese)
+function MonthGridSkeleton() {
+  return (
+    <div data-no-swipe className="rounded-2xl bg-white p-3 ring-1 ring-[#E0E4EB]">
+      <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#9CA5B3]">
+        {['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((d, i) => <div key={i}>{d}</div>)}
+      </div>
+      <div className="mt-1 grid grid-cols-7 gap-0.5">
+        {Array.from({ length: 42 }).map((_, i) => (
+          <div key={i} className="skeleton aspect-square rounded-[9px]" />
+        ))}
+      </div>
     </div>
   )
 }

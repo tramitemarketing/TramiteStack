@@ -52,6 +52,7 @@ export const IconEuro = (p: P) => (<Svg {...p}><path d="M17 8a6 6 0 1 0 0 8" /><
 export const IconUp = (p: P) => (<Svg {...p}><path d="M12 19V5M6 11l6-6 6 6" /></Svg>)
 export const IconDown = (p: P) => (<Svg {...p}><path d="M12 5v14M6 13l6 6 6-6" /></Svg>)
 export const IconClock = (p: P) => (<Svg {...p}><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></Svg>)
+export const IconBell = (p: P) => (<Svg {...p}><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 21a2 2 0 0 0 4 0" /></Svg>)
 
 /* ⋮ menu (riempito) */
 export const IconDots = ({ className, size = 24 }: P) => (

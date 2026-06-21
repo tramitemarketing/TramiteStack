@@ -85,14 +85,33 @@ export async function createTask(formData: FormData) {
   const projectId = String(formData.get('project_id'))
   const title = String(formData.get('title') ?? '').trim()
   if (!title || !projectId) return
-  await supabase.from('tasks').insert({
-    project_id: projectId,
-    title,
-    description: String(formData.get('description') ?? '') || null,
-    priority_level: clampPriority(formData.get('priority_level')),
-    assignee_id: String(formData.get('assignee_id') ?? '') || null,
-    due_date: String(formData.get('due_date') ?? '') || null,
-  })
+  const assigneeId = String(formData.get('assignee_id') ?? '') || null
+  const { data: created } = await supabase
+    .from('tasks')
+    .insert({
+      project_id: projectId,
+      title,
+      description: String(formData.get('description') ?? '') || null,
+      priority_level: clampPriority(formData.get('priority_level')),
+      assignee_id: assigneeId,
+      due_date: String(formData.get('due_date') ?? '') || null,
+    })
+    .select('id')
+    .single()
+
+  // Notifica all'assegnatario (se diverso da chi crea)
+  const actor = await currentUserId()
+  if (assigneeId && assigneeId !== actor && created?.id) {
+    await supabase.rpc('create_notification', {
+      p_user_id: assigneeId,
+      p_type: 'task_assegnata',
+      p_title: 'Nuova task assegnata',
+      p_body: title,
+      p_entity_type: 'task',
+      p_entity_id: created.id,
+    })
+  }
+
   revalidatePath(`/projects/${projectId}`)
   revalidatePath('/tasks')
   revalidatePath('/calendar')
@@ -144,15 +163,34 @@ export async function updateTask(formData: FormData) {
   const id = String(formData.get('id'))
   const title = String(formData.get('title') ?? '').trim()
   if (!id || !title) return
+  const assigneeId = String(formData.get('assignee_id') ?? '') || null
+
+  // Assegnatario precedente (per notificare solo i cambi reali)
+  const { data: prev } = await supabase.from('tasks').select('assignee_id').eq('id', id).maybeSingle()
+  const prevAssignee = (prev as { assignee_id: string | null } | null)?.assignee_id ?? null
+
   await supabase
     .from('tasks')
     .update({
       title,
       priority_level: clampPriority(formData.get('priority_level')),
       due_date: String(formData.get('due_date') ?? '') || null,
-      assignee_id: String(formData.get('assignee_id') ?? '') || null,
+      assignee_id: assigneeId,
     })
     .eq('id', id)
+
+  const actor = await currentUserId()
+  if (assigneeId && assigneeId !== prevAssignee && assigneeId !== actor) {
+    await supabase.rpc('create_notification', {
+      p_user_id: assigneeId,
+      p_type: 'task_assegnata',
+      p_title: 'Task assegnata a te',
+      p_body: title,
+      p_entity_type: 'task',
+      p_entity_id: id,
+    })
+  }
+
   revalidatePath('/tasks')
   revalidatePath('/calendar')
   const projectId = String(formData.get('project_id') ?? '')
@@ -167,16 +205,35 @@ export async function createTransaction(formData: FormData) {
   const amount = Number(formData.get('amount') ?? 0)
   const ownerId = String(formData.get('owner_id') ?? '') || uid
   if (!amount || amount <= 0 || !ownerId) return
-  await supabase.from('transactions').insert({
-    type,
-    amount,
-    owner_id: ownerId,
-    description: String(formData.get('description') ?? '') || null,
-    category: String(formData.get('category') ?? '') || null,
-    project_id: String(formData.get('project_id') ?? '') || null,
-    occurred_on: String(formData.get('occurred_on') ?? '') || new Date().toISOString().slice(0, 10),
-    created_by: uid,
-  })
+  const description = String(formData.get('description') ?? '') || null
+  const { data: created } = await supabase
+    .from('transactions')
+    .insert({
+      type,
+      amount,
+      owner_id: ownerId,
+      description,
+      category: String(formData.get('category') ?? '') || null,
+      project_id: String(formData.get('project_id') ?? '') || null,
+      occurred_on: String(formData.get('occurred_on') ?? '') || new Date().toISOString().slice(0, 10),
+      created_by: uid,
+    })
+    .select('id')
+    .single()
+
+  // Notifica al titolare del movimento (se registrato da un altro)
+  if (ownerId && ownerId !== uid && created?.id) {
+    const segno = type === 'entrata' ? '+' : '−'
+    await supabase.rpc('create_notification', {
+      p_user_id: ownerId,
+      p_type: 'movimento',
+      p_title: 'Nuovo movimento sul tuo bilancio',
+      p_body: `${segno} € ${amount} ${description ? '· ' + description : ''}`.trim(),
+      p_entity_type: 'transaction',
+      p_entity_id: created.id,
+    })
+  }
+
   revalidatePath('/budget')
   revalidatePath('/dashboard')
 }

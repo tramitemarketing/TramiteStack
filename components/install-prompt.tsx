@@ -3,46 +3,30 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { LogoMark } from '@/components/logo'
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
+import { initInstall, subscribeInstall, canInstall, promptInstall, isIOS, isStandalone } from '@/lib/pwa-install'
 
 const DISMISS_KEY = 'tstack-install-dismissed'
 
 export function InstallPrompt() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isIOS, setIsIOS] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [ios, setIos] = useState(false)
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    // Già installata? Non mostrare.
-    const standalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true
-    if (standalone) return
+    initInstall()
+    if (isStandalone()) return
     if (localStorage.getItem(DISMISS_KEY)) return
 
-    const ua = window.navigator.userAgent.toLowerCase()
-    const ios = /iphone|ipad|ipod/.test(ua)
-    if (ios) {
+    if (isIOS()) {
       // Rilevazione ambiente al mount (non un loop di render).
-      /* eslint-disable react-hooks/set-state-in-effect */
-      setIsIOS(true)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIos(true)
       setVisible(true)
-      /* eslint-enable react-hooks/set-state-in-effect */
       return
     }
-
-    const onPrompt = (e: Event) => {
-      e.preventDefault()
-      setDeferred(e as BeforeInstallPromptEvent)
-      setVisible(true)
-    }
-    window.addEventListener('beforeinstallprompt', onPrompt)
-    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
+    // Android: mostra il banner quando l'evento è disponibile.
+    const update = () => { if (canInstall()) setVisible(true) }
+    update()
+    return subscribeInstall(update)
   }, [])
 
   function dismiss() {
@@ -51,9 +35,7 @@ export function InstallPrompt() {
   }
 
   async function install() {
-    if (!deferred) return
-    await deferred.prompt()
-    await deferred.userChoice
+    await promptInstall()
     dismiss()
   }
 
@@ -71,13 +53,13 @@ export function InstallPrompt() {
             <LogoMark size={40} boxed />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold">Installa T-Stack</p>
-              {isIOS ? (
+              {ios ? (
                 <p className="text-xs text-slate-500">Tocca Condividi ⬆️ e poi “Aggiungi a Home”.</p>
               ) : (
                 <p className="text-xs text-slate-500">Aggiungila al telefono per aprirla come un’app.</p>
               )}
             </div>
-            {!isIOS && (
+            {!ios && (
               <button
                 onClick={install}
                 className="press rounded-xl px-3 py-2 text-sm font-semibold text-white"

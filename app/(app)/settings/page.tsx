@@ -3,6 +3,7 @@ import { requireProfile } from '@/lib/auth'
 import { Card, PageHeader, Avatar } from '@/components/ui'
 import { updateRegistrationCode } from '@/app/(app)/actions'
 import { SubmitButton } from '@/components/submit-button'
+import { InstallButton } from '@/components/install-button'
 import type { Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +37,8 @@ export default async function SettingsPage() {
           </div>
         </div>
       </Card>
+
+      <InstallButton />
 
       <section>
         <h2 className="mb-2 font-bold">Team ({team.length})</h2>

@@ -8,6 +8,7 @@ import { IconPlus } from '@/components/icons'
 
 const inputCls =
   'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
+const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
 
 export function CreateTaskButton({
   projects,
@@ -64,29 +65,44 @@ export function CreateTaskButton({
                 <button onClick={() => setOpen(false)} className="text-slate-400">✕</button>
               </div>
               <form onSubmit={onSubmit} className="space-y-3">
-                <input name="title" required className={inputCls} placeholder="Titolo del task" autoFocus />
-                <select name="project_id" required className={inputCls} defaultValue={defaultProjectId ?? ''}>
-                  <option value="" disabled>Progetto…</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-2 gap-3">
-                  <select name="priority_level" className={inputCls} defaultValue="3">
-                    <option value="1">Priorità 1</option>
-                    <option value="2">Priorità 2</option>
-                    <option value="3">Priorità 3</option>
-                    <option value="4">Priorità 4</option>
-                    <option value="5">Priorità 5</option>
-                  </select>
-                  <input type="date" name="due_date" className={inputCls} />
+                <div>
+                  <label className={labelCls}>Titolo <span className="text-danger">*</span></label>
+                  <input name="title" required className={inputCls} placeholder="Titolo del task" autoFocus />
                 </div>
-                <select name="assignee_id" className={inputCls} defaultValue="">
-                  <option value="">In carico a… (nessuno)</option>
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
-                  ))}
-                </select>
+                <div>
+                  <label className={labelCls}>Progetto <span className="text-danger">*</span></label>
+                  <select name="project_id" required className={inputCls} defaultValue={defaultProjectId ?? ''}>
+                    <option value="" disabled>Seleziona progetto…</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Priorità</label>
+                    <select name="priority_level" className={inputCls} defaultValue="3">
+                      <option value="1">P1 · Urgente</option>
+                      <option value="2">P2 · Alta</option>
+                      <option value="3">P3 · Media</option>
+                      <option value="4">P4 · Bassa</option>
+                      <option value="5">P5 · Molto bassa</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Scadenza</label>
+                    <input type="date" name="due_date" className={inputCls} />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Assegnatario</label>
+                  <select name="assignee_id" className={inputCls} defaultValue="">
+                    <option value="">Nessuno</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
+                    ))}
+                  </select>
+                </div>
                 <button
                   type="submit"
                   disabled={pending}

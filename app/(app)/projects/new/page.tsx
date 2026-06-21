@@ -33,9 +33,11 @@ export default function NewProjectPage() {
             <div>
               <label className="mb-1 block text-sm font-semibold">Priorità</label>
               <select name="priority_level" className={inputCls} defaultValue="3">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
+                <option value="1">P1 · Urgente</option>
+                <option value="2">P2 · Alta</option>
+                <option value="3">P3 · Media</option>
+                <option value="4">P4 · Bassa</option>
+                <option value="5">P5 · Molto bassa</option>
               </select>
             </div>
           </div>

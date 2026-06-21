@@ -51,7 +51,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <IconBack size={22} />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display truncate text-[19px] font-extrabold tracking-tight text-navy">{p.name}</h1>
+          <h1 className="font-display text-[19px] font-extrabold leading-tight tracking-tight text-navy">{p.name}</h1>
           <p className="text-[11px] font-semibold text-[#9CA5B3]">
             {taskRows.length} task · {p.status.replace('_', ' ')}
           </p>

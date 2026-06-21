@@ -23,11 +23,11 @@ export default function LoginPage() {
 
         <form action={formAction} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-semibold text-slate-700">Email</label>
+            <label htmlFor="email" className="mb-1 block text-sm font-semibold text-slate-700">Email <span className="text-danger">*</span></label>
             <input id="email" name="email" type="email" autoComplete="email" required className={inputCls} placeholder="nome@tramitemarketing.it" />
           </div>
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-semibold text-slate-700">Password</label>
+            <label htmlFor="password" className="mb-1 block text-sm font-semibold text-slate-700">Password <span className="text-danger">*</span></label>
             <input id="password" name="password" type="password" autoComplete="current-password" required className={inputCls} placeholder="••••••••" />
           </div>
 

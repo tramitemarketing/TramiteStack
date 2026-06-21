@@ -13,7 +13,7 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
 
   const load = useCallback(async () => {
     const { data } = await supabase
-      .from('tstack-attachments')
+      .from('attachments')
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })
@@ -35,7 +35,7 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
       const path = `${projectId}/${Date.now()}-${file.name}`
       const { error: upErr } = await supabase.storage.from('tstack-attachments').upload(path, file)
       if (upErr) throw upErr
-      const { error: insErr } = await supabase.from('tstack-attachments').insert({
+      const { error: insErr } = await supabase.from('attachments').insert({
         project_id: projectId,
         file_path: path,
         file_name: file.name,
@@ -44,8 +44,9 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
       })
       if (insErr) throw insErr
       await load()
-    } catch {
-      setError('Caricamento non riuscito. Controlla di avere i permessi.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'errore sconosciuto'
+      setError(`Caricamento non riuscito: ${msg}`)
     } finally {
       setUploading(false)
       e.target.value = ''

@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic'
 
 const inputCls =
   'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
+const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
 
 export default async function CalendarPage({
   searchParams,
@@ -57,14 +58,23 @@ export default async function CalendarPage({
       <AutoScrollDetails summary="+ Nuovo evento">
         <Card className="mt-2">
           <form action={createEvent} className="space-y-3">
-            <input name="title" required className={inputCls} placeholder="Titolo evento" />
-            <input type="datetime-local" name="starts_at" required className={inputCls} />
-            <select name="project_id" className={inputCls} defaultValue="">
-              <option value="">— Nessun progetto —</option>
-              {projects2.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+            <div>
+              <label className={labelCls}>Titolo <span className="text-danger">*</span></label>
+              <input name="title" required className={inputCls} placeholder="Titolo evento" />
+            </div>
+            <div>
+              <label className={labelCls}>Data e ora <span className="text-danger">*</span></label>
+              <input type="datetime-local" name="starts_at" required className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Progetto</label>
+              <select name="project_id" className={inputCls} defaultValue="">
+                <option value="">— Nessun progetto —</option>
+                {projects2.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
             <input name="description" className={inputCls} placeholder="Note (facoltative)" />
             <SubmitButton pendingLabel="Aggiunta…" className="w-full rounded-[10px] px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
               Aggiungi evento

@@ -50,7 +50,7 @@ export async function signUp(_prev: unknown, formData: FormData) {
     return { error: 'Nome collaborazione non valido. Contatta un collega.' }
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password,
     // `display_name` collega lo username al Display Name di Supabase.
@@ -61,6 +61,15 @@ export async function signUp(_prev: unknown, formData: FormData) {
       return { error: 'Esiste già un account con questa email.' }
     }
     return { error: 'Registrazione non riuscita: ' + error.message }
+  }
+
+  // Crea subito la riga profilo, così l'utente compare nel team senza attendere
+  // il primo caricamento (fallback: creazione lazy in requireProfile).
+  const newUserId = signUpData.user?.id
+  if (newUserId) {
+    await supabase
+      .from('profiles')
+      .upsert({ id: newUserId, username, full_name: username }, { onConflict: 'id' })
   }
 
   // Con la conferma email disattivata, signUp stabilisce già la sessione.

@@ -1,14 +1,22 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { signOut } from '@/app/login/actions'
 import { Avatar } from '@/components/ui'
+import { CenterSpinner } from '@/components/loading-overlay'
 
 // Avatar con menu rapido (Impostazioni + Esci).
 export function HeaderAccount({ username }: { username: string | null }) {
   const [open, setOpen] = useState(false)
+  const [pending, startTransition] = useTransition()
+  const router = useRouter()
   const ref = useRef<HTMLDivElement>(null)
+
+  function goSettings() {
+    setOpen(false)
+    startTransition(() => router.push('/settings'))
+  }
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -20,6 +28,7 @@ export function HeaderAccount({ username }: { username: string | null }) {
 
   return (
     <div className="relative" ref={ref}>
+      {pending && <CenterSpinner />}
       <button onClick={() => setOpen((v) => !v)} className="press rounded-full" aria-label="Account">
         <Avatar name={username} size={36} />
       </button>
@@ -29,9 +38,9 @@ export function HeaderAccount({ username }: { username: string | null }) {
             <p className="text-[11px] font-semibold text-[#9CA5B3]">Accesso come</p>
             <p className="truncate text-sm font-bold text-[#1A1F2B]">{username || 'Utente'}</p>
           </div>
-          <Link href="/settings" className="block px-3.5 py-2.5 text-sm font-semibold text-[#3E4757] hover:bg-[#F7F8FA]">
+          <button onClick={goSettings} className="block w-full px-3.5 py-2.5 text-left text-sm font-semibold text-[#3E4757] hover:bg-[#F7F8FA]">
             Impostazioni
-          </Link>
+          </button>
           <form action={signOut}>
             <button type="submit" className="block w-full px-3.5 py-2.5 text-left text-sm font-semibold text-[#D8553F] hover:bg-[#FBEAE6]">
               Esci

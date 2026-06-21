@@ -160,7 +160,7 @@ function Column({
       <div
         ref={setNodeRef}
         className={cn(
-          'min-h-32 flex-1 space-y-2 rounded-xl p-1.5 transition',
+          'min-h-[60vh] flex-1 space-y-2 rounded-xl p-1.5 transition',
           isOver ? 'bg-brand-50 ring-2 ring-[#B3D2F0]' : 'bg-[#EFF1F5]/70',
         )}
       >

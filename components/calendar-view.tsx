@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval,
@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { deleteEvent } from '@/app/(app)/actions'
 import { SubmitIcon } from '@/components/submit-button'
+import { CenterSpinner } from '@/components/loading-overlay'
 import { IconChevronLeft, IconChevronRight, IconTrash } from '@/components/icons'
 import { EmptyCalendar } from '@/components/illustrations'
 
@@ -35,8 +36,11 @@ const KIND_LABEL: Record<CalItem['kind'], string> = {
 
 export function CalendarView({ items, off }: { items: CalItem[]; off: number }) {
   const router = useRouter()
+  const [pending, startTransition] = useTransition()
   const month = addMonths(new Date(), off)
   const [selected, setSelected] = useState<string | null>(format(new Date(), 'yyyy-MM-dd'))
+
+  const goTo = (n: number) => startTransition(() => router.push(`/calendar?off=${n}`))
 
   const gridStart = startOfWeek(startOfMonth(month), { weekStartsOn: 1 })
   const gridEnd = endOfWeek(endOfMonth(month), { weekStartsOn: 1 })
@@ -45,16 +49,17 @@ export function CalendarView({ items, off }: { items: CalItem[]; off: number }) 
 
   return (
     <div className="space-y-4">
+      {pending && <CenterSpinner />}
       {/* Header mese */}
       <div className="flex items-center justify-between">
-        <button onClick={() => router.push(`/calendar?off=${off - 1}`)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese precedente">
+        <button onClick={() => goTo(off - 1)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese precedente">
           <IconChevronLeft size={18} />
         </button>
         <div className="text-center">
           <p className="font-display text-lg font-extrabold capitalize text-navy">{format(month, 'MMMM yyyy', { locale: it })}</p>
-          <button onClick={() => router.push('/calendar?off=0')} className="press text-[11px] font-bold text-brand">Oggi</button>
+          <button onClick={() => goTo(0)} className="press text-[11px] font-bold text-brand">Oggi</button>
         </div>
-        <button onClick={() => router.push(`/calendar?off=${off + 1}`)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese successivo">
+        <button onClick={() => goTo(off + 1)} className="press flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#E0E4EB] bg-white text-[#3E4757]" aria-label="Mese successivo">
           <IconChevronRight size={18} />
         </button>
       </div>

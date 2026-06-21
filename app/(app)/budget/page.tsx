@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic'
 
 const inputCls =
   'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
+const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
 
 type TxRow = Transaction & { owner: { username: string | null } | null }
 
@@ -73,21 +74,33 @@ export default async function BudgetPage() {
       <AutoScrollDetails summary="+ Aggiungi entrata / uscita">
         <Card className="mt-2">
           <form action={createTransaction} className="space-y-3">
-            <select name="owner_id" required className={inputCls} defaultValue={me.id}>
-              {memberList.map((m) => (
-                <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
-              ))}
-            </select>
-            <div className="grid grid-cols-2 gap-3">
-              <select name="type" className={inputCls} defaultValue="entrata">
-                <option value="entrata">Entrata</option>
-                <option value="uscita">Uscita</option>
+            <div>
+              <label className={labelCls}>Dipendente <span className="text-danger">*</span></label>
+              <select name="owner_id" required className={inputCls} defaultValue={me.id}>
+                {memberList.map((m) => (
+                  <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
+                ))}
               </select>
-              <input type="number" step="0.01" min="0" name="amount" required className={inputCls} placeholder="Importo €" />
             </div>
-            <input name="description" className={inputCls} placeholder="Descrizione" />
             <div className="grid grid-cols-2 gap-3">
-              <input name="category" className={inputCls} placeholder="Categoria" />
+              <div>
+                <label className={labelCls}>Tipo</label>
+                <select name="type" className={inputCls} defaultValue="entrata">
+                  <option value="entrata">Entrata</option>
+                  <option value="uscita">Uscita</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Importo € <span className="text-danger">*</span></label>
+                <input type="number" step="0.01" min="0" name="amount" required className={inputCls} placeholder="0,00" />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>Descrizione</label>
+              <input name="description" className={inputCls} placeholder="Es. Pagamento cliente Rossi" />
+            </div>
+            <div>
+              <label className={labelCls}>Data</label>
               <input type="date" name="occurred_on" className={inputCls} defaultValue={new Date().toISOString().slice(0, 10)} />
             </div>
             <SubmitButton pendingLabel="Registrazione…" className="w-full rounded-[10px] px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
@@ -107,7 +120,7 @@ export default async function BudgetPage() {
             {txRows.map((t) => {
               const entrata = t.type === 'entrata'
               return (
-                <div key={t.id} className="group flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-[#E0E4EB]">
+                <div key={t.id} className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-[#E0E4EB]">
                   <span
                     className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px]', entrata ? 'bg-[#E6F3EC] text-ok' : 'bg-[#FBEAE6] text-danger')}
                   >
@@ -115,14 +128,14 @@ export default async function BudgetPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.description || t.category || 'Movimento'}</p>
-                    <p className="text-[11px] font-semibold text-[#9CA5B3]">{t.owner?.username ?? '—'} · {formatDate(t.occurred_on, 'd MMM')}</p>
+                    <p className="truncate text-[11px] font-semibold text-[#9CA5B3]">{t.owner?.username ?? '—'} · {formatDate(t.occurred_on, 'd MMM')}</p>
                   </div>
-                  <span className={cn('font-display text-sm font-extrabold tnum', entrata ? 'text-ok' : 'text-danger')}>
+                  <span className={cn('shrink-0 whitespace-nowrap font-display text-sm font-extrabold tnum', entrata ? 'text-ok' : 'text-danger')}>
                     {entrata ? '+' : '−'} {formatEuro(Number(t.amount))}
                   </span>
-                  <form action={deleteTransaction}>
+                  <form action={deleteTransaction} className="shrink-0">
                     <input type="hidden" name="id" value={t.id} />
-                    <SubmitIcon label="Elimina movimento" className="p-1 text-[#C4CBD6] opacity-0 transition group-hover:opacity-100 hover:text-danger">
+                    <SubmitIcon label="Elimina movimento" className="flex h-7 w-7 items-center justify-center rounded-lg text-[#C4CBD6] hover:bg-[#FBEAE6] hover:text-danger">
                       <IconTrash size={16} />
                     </SubmitIcon>
                   </form>

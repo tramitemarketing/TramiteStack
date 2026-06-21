@@ -10,6 +10,7 @@ import { PROJECT_STATUS_LABEL, type Project } from '@/types/database'
 
 const inputCls =
   'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
+const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
 
 export function EditProject({
   project,
@@ -54,18 +55,34 @@ export function EditProject({
             </div>
             <form onSubmit={onSubmit} className="space-y-3">
               <input type="hidden" name="id" value={project.id} />
-              <input name="name" required defaultValue={project.name} className={inputCls} placeholder="Titolo" />
-              <textarea name="description" rows={3} defaultValue={project.description ?? ''} className={inputCls} placeholder="Descrizione" />
-              <div className="grid grid-cols-2 gap-3">
-                <select name="status" className={inputCls} defaultValue={project.status}>
-                  {Object.entries(PROJECT_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-                <select name="priority_level" className={inputCls} defaultValue={String(project.priority_level)}>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>Priorità {n}</option>)}
-                </select>
+              <div>
+                <label className={labelCls}>Titolo <span className="text-danger">*</span></label>
+                <input name="name" required defaultValue={project.name} className={inputCls} placeholder="Titolo" />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold">Scadenza</label>
+                <label className={labelCls}>Descrizione</label>
+                <textarea name="description" rows={3} defaultValue={project.description ?? ''} className={inputCls} placeholder="Descrizione" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Stato</label>
+                  <select name="status" className={inputCls} defaultValue={project.status}>
+                    {Object.entries(PROJECT_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Priorità</label>
+                  <select name="priority_level" className={inputCls} defaultValue={String(project.priority_level)}>
+                    <option value="1">P1 · Urgente</option>
+                    <option value="2">P2 · Alta</option>
+                    <option value="3">P3 · Media</option>
+                    <option value="4">P4 · Bassa</option>
+                    <option value="5">P5 · Molto bassa</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className={labelCls}>Scadenza</label>
                 <input type="date" name="due_date" className={inputCls} defaultValue={project.due_date ?? ''} />
               </div>
               <button type="submit" disabled={pending} className="press w-full rounded-xl px-4 py-3 font-semibold text-white disabled:opacity-60" style={{ backgroundColor: 'var(--brand)' }}>

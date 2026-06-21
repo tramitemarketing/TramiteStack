@@ -10,6 +10,14 @@ import type { Task } from '@/types/database'
 
 const inputCls =
   'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
+const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
+const PRIORITY_OPTS = [
+  { v: '1', l: 'P1 · Urgente' },
+  { v: '2', l: 'P2 · Alta' },
+  { v: '3', l: 'P3 · Media' },
+  { v: '4', l: 'P4 · Bassa' },
+  { v: '5', l: 'P5 · Molto bassa' },
+]
 
 export function EditTask({
   task,
@@ -58,17 +66,29 @@ export function EditTask({
             <form onSubmit={onSubmit} className="space-y-3">
               <input type="hidden" name="id" value={task.id} />
               <input type="hidden" name="project_id" value={task.project_id} />
-              <input name="title" required defaultValue={task.title} className={inputCls} placeholder="Titolo del task" />
-              <div className="grid grid-cols-2 gap-3">
-                <select name="priority_level" className={inputCls} defaultValue={String(task.priority_level)}>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>Priorità {n}</option>)}
-                </select>
-                <input type="date" name="due_date" className={inputCls} defaultValue={task.due_date ?? ''} />
+              <div>
+                <label className={labelCls}>Titolo <span className="text-danger">*</span></label>
+                <input name="title" required defaultValue={task.title} className={inputCls} placeholder="Titolo del task" />
               </div>
-              <select name="assignee_id" className={inputCls} defaultValue={task.assignee_id ?? ''}>
-                <option value="">In carico a… (nessuno)</option>
-                {members.map((m) => <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>)}
-              </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Priorità</label>
+                  <select name="priority_level" className={inputCls} defaultValue={String(task.priority_level)}>
+                    {PRIORITY_OPTS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Scadenza</label>
+                  <input type="date" name="due_date" className={inputCls} defaultValue={task.due_date ?? ''} />
+                </div>
+              </div>
+              <div>
+                <label className={labelCls}>Assegnatario</label>
+                <select name="assignee_id" className={inputCls} defaultValue={task.assignee_id ?? ''}>
+                  <option value="">Nessuno</option>
+                  {members.map((m) => <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>)}
+                </select>
+              </div>
               <button type="submit" disabled={pending} className="press w-full rounded-xl px-4 py-3 font-semibold text-white disabled:opacity-60" style={{ backgroundColor: 'var(--brand)' }}>
                 {pending ? 'Salvataggio…' : 'Salva modifiche'}
               </button>

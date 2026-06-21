@@ -6,18 +6,30 @@ import type { Project } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
-type Row = Project & { tasks: { count: number }[] }
-
 export default async function ProjectsPage() {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('projects')
-    .select('*, tasks(count)')
-    .order('priority_level', { ascending: true })
-    .order('created_at', { ascending: false })
+  const [{ data }, { data: taskStatus }] = await Promise.all([
+    supabase
+      .from('projects')
+      .select('*')
+      .order('priority_level', { ascending: true })
+      .order('created_at', { ascending: false }),
+    supabase.from('tasks').select('project_id, status'),
+  ])
 
-  const rows = (data as Row[] | null) ?? []
-  const projects: ProjectRow[] = rows.map((p) => ({ ...p, taskCount: p.tasks?.[0]?.count ?? 0 }))
+  const rows = (data as Project[] | null) ?? []
+  const counts = new Map<string, { total: number; done: number }>()
+  for (const t of (taskStatus as { project_id: string; status: string }[] | null) ?? []) {
+    const c = counts.get(t.project_id) ?? { total: 0, done: 0 }
+    c.total++
+    if (t.status === 'completato') c.done++
+    counts.set(t.project_id, c)
+  }
+  const projects: ProjectRow[] = rows.map((p) => ({
+    ...p,
+    taskCount: counts.get(p.id)?.total ?? 0,
+    done: counts.get(p.id)?.done ?? 0,
+  }))
 
   return (
     <div className="space-y-4">

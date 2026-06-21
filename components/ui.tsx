@@ -134,6 +134,22 @@ export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   )
 }
 
+// Barra di avanzamento (task completate / totali)
+export function ProgressBar({ done, total }: { done: number; total: number }) {
+  const pct = total ? Math.round((done / total) * 100) : 0
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[11px] font-semibold text-[#9CA5B3]">
+        <span>{done}/{total} task completate</span>
+        <span className="tnum">{pct}%</span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EFF1F5]">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: pct === 100 ? 'var(--ok)' : 'var(--brand)' }} />
+      </div>
+    </div>
+  )
+}
+
 // Badge priorità "P#" colorato
 export function PriorityBadge({ level }: { level: number }) {
   return (

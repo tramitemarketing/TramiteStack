@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Card, ProjectStatusBadge, PriorityBadge, EmptyState } from '@/components/ui'
+import { Card, ProjectStatusBadge, PriorityBadge, ProgressBar, EmptyState } from '@/components/ui'
 import { IconSearch } from '@/components/icons'
 import { EmptyProjects } from '@/components/illustrations'
 import { formatDate } from '@/lib/utils'
 import type { Project } from '@/types/database'
 
-export type ProjectRow = Project & { taskCount: number }
+export type ProjectRow = Project & { taskCount: number; done: number }
 
 export function ProjectsList({ projects }: { projects: ProjectRow[] }) {
   const [q, setQ] = useState('')
@@ -54,11 +54,9 @@ export function ProjectsList({ projects }: { projects: ProjectRow[] }) {
                 </div>
                 <div className="flex items-center justify-between">
                   <ProjectStatusBadge status={p.status} />
-                  <div className="flex items-center gap-3 text-[11px] font-semibold text-[#9CA5B3]">
-                    <span>{p.taskCount} task</span>
-                    {p.due_date && <span>{formatDate(p.due_date, 'd MMM')}</span>}
-                  </div>
+                  {p.due_date && <span className="text-[11px] font-semibold text-[#9CA5B3]">{formatDate(p.due_date, 'd MMM')}</span>}
                 </div>
+                {p.taskCount > 0 && <ProgressBar done={p.done} total={p.taskCount} />}
               </Card>
             </Link>
           ))}

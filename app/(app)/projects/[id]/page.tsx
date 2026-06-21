@@ -6,6 +6,7 @@ import {
   ProjectStatusBadge,
   TaskStatusBadge,
   PriorityBadge,
+  ProgressBar,
   EmptyState,
   Avatar,
 } from '@/components/ui'
@@ -70,6 +71,12 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
       {p.description && <p className="text-sm font-medium text-[#5A6473]">{p.description}</p>}
+
+      {taskRows.length > 0 && (
+        <Card className="p-3">
+          <ProgressBar done={taskRows.filter((t) => t.status === 'completato').length} total={taskRows.length} />
+        </Card>
+      )}
 
       {/* Elimina progetto */}
       <form action={deleteProject}>

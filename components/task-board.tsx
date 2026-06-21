@@ -6,15 +6,17 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
+  closestCenter,
   useSensor,
   useSensors,
-  useDraggable,
   useDroppable,
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { motion } from 'framer-motion'
-import { moveTask, deleteTask } from '@/app/(app)/actions'
+import { reorderTasks, deleteTask } from '@/app/(app)/actions'
 import { cn } from '@/lib/utils'
 import {
   TASK_STATUS_ORDER,
@@ -70,10 +72,15 @@ function TaskCard({
   members: Member[]
   overlay?: boolean
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    data: { status: task.status },
+  })
+  const style = overlay ? undefined : { transform: CSS.Transform.toString(transform), transition }
   return (
     <div
       ref={overlay ? undefined : setNodeRef}
+      style={style}
       {...(overlay ? {} : attributes)}
       {...(overlay ? {} : listeners)}
       className={cn(
@@ -129,7 +136,7 @@ function Column({
   tasks: BoardTask[]
   members: Member[]
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: status })
+  const { setNodeRef, isOver } = useDroppable({ id: status, data: { type: 'column', status } })
   return (
     <div className="flex min-w-[244px] flex-1 flex-col">
       <div className="mb-2 flex items-center gap-2 px-1">
@@ -144,9 +151,11 @@ function Column({
           isOver ? 'bg-brand-50 ring-2 ring-[#B3D2F0]' : 'bg-[#EFF1F5]/70',
         )}
       >
-        {tasks.map((t) => (
-          <TaskCard key={t.id} task={t} members={members} />
-        ))}
+        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          {tasks.map((t) => (
+            <TaskCard key={t.id} task={t} members={members} />
+          ))}
+        </SortableContext>
         {tasks.length === 0 && <p className="py-6 text-center text-[11px] font-medium text-[#C4CBD6]">trascina qui</p>}
       </div>
     </div>
@@ -203,27 +212,62 @@ export function TaskBoard({
     setActiveId(String(e.active.id))
   }
 
+  function orderedIds(list: BoardTask[], status: TaskStatus) {
+    return list.filter((t) => t.status === status).sort((a, b) => a.position - b.position).map((t) => t.id)
+  }
+
   function onDragEnd(e: DragEndEvent) {
     setActiveId(null)
-    const taskId = String(e.active.id)
-    const overId = e.over?.id ? String(e.over.id) : null
-    if (!overId) return
-    const newStatus = overId as TaskStatus
-    const task = tasks.find((t) => t.id === taskId)
-    if (!task || task.status === newStatus) return
+    const id = String(e.active.id)
+    const over = e.over
+    if (!over) return
+    const overId = String(over.id)
+    const activeTask = tasks.find((t) => t.id === id)
+    if (!activeTask) return
 
-    // Update ottimistico immediato (niente spinner: lo spostamento è istantaneo).
-    const position = tasks.filter((t) => t.status === newStatus).length
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: newStatus, position } : t)))
+    const isColumn = (TASK_STATUS_ORDER as string[]).includes(overId)
+    const overTask = isColumn ? null : tasks.find((t) => t.id === overId)
+    const targetStatus = (isColumn ? overId : overTask?.status) as TaskStatus
+    if (!targetStatus) return
+
+    const sourceStatus = activeTask.status
+
+    // Lista target senza l'elemento attivo, poi inserimento all'indice giusto.
+    const targetIds = orderedIds(tasks, targetStatus).filter((x) => x !== id)
+    let insertIndex = isColumn ? targetIds.length : targetIds.indexOf(overId)
+    if (insertIndex < 0) insertIndex = targetIds.length
+    targetIds.splice(insertIndex, 0, id)
+
+    // Nessun cambiamento reale → esci.
+    if (sourceStatus === targetStatus) {
+      const before = orderedIds(tasks, targetStatus)
+      if (before.join() === targetIds.join()) return
+    }
+
+    const updates: { id: string; status: TaskStatus; position: number }[] = []
+    targetIds.forEach((tid, i) => updates.push({ id: tid, status: targetStatus, position: i }))
+    if (sourceStatus !== targetStatus) {
+      orderedIds(tasks, sourceStatus)
+        .filter((x) => x !== id)
+        .forEach((tid, i) => updates.push({ id: tid, status: sourceStatus, position: i }))
+    }
+
+    // Update ottimistico (niente spinner: lo spostamento è istantaneo).
+    setTasks((prev) =>
+      prev.map((t) => {
+        const u = updates.find((x) => x.id === t.id)
+        return u ? { ...t, status: u.status, position: u.position } : t
+      }),
+    )
     startTransition(async () => {
-      await moveTask(taskId, newStatus, position)
+      await reorderTasks(updates)
     })
   }
 
   const active = tasks.find((t) => t.id === activeId) ?? null
 
   return (
-    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd}>
       {/* Header: Task · filtro · Nuovo */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <h1 className="font-display text-[26px] font-extrabold leading-none tracking-tight text-navy">Task</h1>
@@ -273,7 +317,6 @@ export function TaskBoard({
           )}
         </div>
       )}
-
       <div data-no-swipe className="no-scrollbar relative left-1/2 w-screen -translate-x-1/2 overflow-x-auto px-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
           {TASK_STATUS_ORDER.map((status) => (

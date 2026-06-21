@@ -124,6 +124,17 @@ export async function moveTask(id: string, status: TaskStatus, position: number)
   revalidatePath('/tasks')
 }
 
+// Riordino/spostamento drag&drop: aggiorna stato + posizione di più task.
+export async function reorderTasks(items: { id: string; status: TaskStatus; position: number }[]) {
+  if (!items.length) return
+  const supabase = await createClient()
+  await Promise.all(
+    items.map((it) => supabase.from('tasks').update({ status: it.status, position: it.position }).eq('id', it.id)),
+  )
+  revalidatePath('/tasks')
+  revalidatePath('/calendar')
+}
+
 // Presa in carico: assegna la task all'utente corrente
 export async function claimTask(formData: FormData) {
   const supabase = await createClient()

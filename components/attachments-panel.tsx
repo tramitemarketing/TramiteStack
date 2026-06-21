@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui'
+import { IconTrash, IconFile } from '@/components/icons'
 import type { Attachment } from '@/types/database'
 
 export function AttachmentsPanel({ projectId }: { projectId: string }) {
   const supabase = createClient()
   const [files, setFiles] = useState<Attachment[]>([])
   const [uploading, setUploading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -58,6 +60,25 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
     if (data?.signedUrl) window.open(data.signedUrl, '_blank')
   }
 
+  async function remove(att: Attachment) {
+    if (!confirm(`Eliminare l'allegato “${att.file_name}”?`)) return
+    setDeletingId(att.id)
+    setError(null)
+    try {
+      // Prima il file nello storage, poi il record (così non restano orfani).
+      const { error: stErr } = await supabase.storage.from('tstack-attachments').remove([att.file_path])
+      if (stErr) throw stErr
+      const { error: dbErr } = await supabase.from('attachments').delete().eq('id', att.id)
+      if (dbErr) throw dbErr
+      await load()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'errore sconosciuto'
+      setError(`Eliminazione non riuscita: ${msg}`)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <section>
       <h2 className="mb-2 font-display font-bold text-[#1A1F2B]">Allegati</h2>
@@ -72,13 +93,19 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
         ) : (
           <ul className="space-y-1.5">
             {files.map((f) => (
-              <li key={f.id}>
+              <li key={f.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[#F7F8FA]">
+                <button onClick={() => download(f)} className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm">
+                  <IconFile size={16} className="shrink-0 text-[#9CA5B3]" />
+                  <span className="truncate text-[#1A1F2B]">{f.file_name}</span>
+                  <span className="ml-auto shrink-0 text-xs font-bold text-brand">Scarica</span>
+                </button>
                 <button
-                  onClick={() => download(f)}
-                  className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm hover:bg-slate-50"
+                  onClick={() => remove(f)}
+                  disabled={deletingId === f.id}
+                  aria-label="Elimina allegato"
+                  className="press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#C4CBD6] hover:bg-[#FBEAE6] hover:text-danger disabled:opacity-50"
                 >
-                  <span className="truncate">{f.file_name}</span>
-                  <span className="text-xs font-bold text-brand">Scarica</span>
+                  {deletingId === f.id ? <span className="spinner" style={{ width: '0.9rem', height: '0.9rem' }} /> : <IconTrash size={16} />}
                 </button>
               </li>
             ))}

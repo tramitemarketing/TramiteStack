@@ -14,7 +14,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { motion } from 'framer-motion'
-import { moveTask, deleteTask, claimTask, releaseTask } from '@/app/(app)/actions'
+import { moveTask, deleteTask } from '@/app/(app)/actions'
 import { cn } from '@/lib/utils'
 import {
   TASK_STATUS_ORDER,
@@ -24,7 +24,7 @@ import {
   type TaskStatus,
 } from '@/types/database'
 import { PriorityBadge, Avatar } from '@/components/ui'
-import { SubmitButton, SubmitIcon } from '@/components/submit-button'
+import { SubmitIcon } from '@/components/submit-button'
 import { EditTask } from '@/components/edit-task'
 import { IconTrash, IconFilter, IconCheck } from '@/components/icons'
 
@@ -59,39 +59,12 @@ function tagStyle(name: string) {
 
 const stop = (e: React.PointerEvent) => e.stopPropagation()
 
-function AssigneeControl({ task, meId }: { task: BoardTask; meId: string }) {
-  if (!task.assignee_id) {
-    return (
-      <form action={claimTask} onPointerDown={stop}>
-        <input type="hidden" name="id" value={task.id} />
-        <input type="hidden" name="project_id" value={task.project_id} />
-        <SubmitButton className="rounded-md bg-brand-50 px-2 py-1 text-[11px] font-bold" style={{ color: 'var(--brand)' }}>
-          + Prendi in carico
-        </SubmitButton>
-      </form>
-    )
-  }
-  const mine = task.assignee_id === meId
-  return (
-    <form action={mine ? releaseTask : claimTask} onPointerDown={stop} className="flex items-center gap-1.5">
-      <input type="hidden" name="id" value={task.id} />
-      <input type="hidden" name="project_id" value={task.project_id} />
-      <Avatar name={task.assigneeName} size={22} />
-      <SubmitButton className="text-[11px] font-semibold text-[#5A6473]">
-        {task.assigneeName}{mine ? ' · lascia' : ''}
-      </SubmitButton>
-    </form>
-  )
-}
-
 function TaskCard({
   task,
-  meId,
   members,
   overlay = false,
 }: {
   task: BoardTask
-  meId: string
   members: Member[]
   overlay?: boolean
 }) {
@@ -131,7 +104,14 @@ function TaskCard({
         )}
         <div className="mt-2 flex items-center justify-between gap-2">
           <PriorityBadge level={task.priority_level} />
-          {!overlay && <AssigneeControl task={task} meId={meId} />}
+          {task.assigneeName ? (
+            <span className="flex min-w-0 items-center gap-1.5">
+              <Avatar name={task.assigneeName} size={22} />
+              <span className="truncate text-[11px] font-semibold text-[#5A6473]">{task.assigneeName}</span>
+            </span>
+          ) : (
+            <span className="text-[11px] font-semibold text-[#C4CBD6]">Non assegnata</span>
+          )}
         </div>
       </div>
     </div>
@@ -141,12 +121,10 @@ function TaskCard({
 function Column({
   status,
   tasks,
-  meId,
   members,
 }: {
   status: TaskStatus
   tasks: BoardTask[]
-  meId: string
   members: Member[]
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
@@ -165,7 +143,7 @@ function Column({
         )}
       >
         {tasks.map((t) => (
-          <TaskCard key={t.id} task={t} meId={meId} members={members} />
+          <TaskCard key={t.id} task={t} members={members} />
         ))}
         {tasks.length === 0 && <p className="py-6 text-center text-[11px] font-medium text-[#C4CBD6]">trascina qui</p>}
       </div>
@@ -294,14 +272,13 @@ export function TaskBoard({
             <Column
               key={status}
               status={status}
-              meId={meId}
               members={members}
               tasks={filtered.filter((t) => t.status === status).sort((a, b) => a.position - b.position)}
             />
           ))}
         </motion.div>
       </div>
-      <DragOverlay>{active ? <TaskCard task={active} meId={meId} members={members} overlay /> : null}</DragOverlay>
+      <DragOverlay>{active ? <TaskCard task={active} members={members} overlay /> : null}</DragOverlay>
     </DndContext>
   )
 }

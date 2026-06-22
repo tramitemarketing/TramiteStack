@@ -44,7 +44,8 @@ export function ProjectsList({ projects }: { projects: ProjectRow[] }) {
         <div className="space-y-2.5">
           {filtered.map((p) => (
             <Link key={p.id} href={`/projects/${p.id}`} className="press block">
-              <Card className="space-y-2.5">
+              <Card className="relative space-y-2.5 overflow-hidden pl-5">
+                <span className="absolute left-0 top-0 h-full w-1.5" style={{ backgroundColor: p.color || '#2A78C2' }} />
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-display truncate text-[15px] font-bold text-[#1A1F2B]">{p.name}</p>

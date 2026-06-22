@@ -25,7 +25,7 @@ export default async function DashboardPage() {
       .from('tasks')
       .select('*, projects(name)')
       .eq('due_date', today)
-      .eq('assignee_id', profile.id)
+      .contains('assignee_ids', [profile.id])
       .neq('status', 'completato')
       .order('priority_level', { ascending: true }),
   ])

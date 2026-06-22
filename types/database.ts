@@ -51,6 +51,7 @@ export interface Task {
   status: TaskStatus
   priority_level: number // 1–5
   assignee_id: string | null
+  assignee_ids: string[]
   due_date: string | null
   position: number
   created_at: string

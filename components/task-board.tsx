@@ -25,7 +25,8 @@ import {
   type Task,
   type TaskStatus,
 } from '@/types/database'
-import { PriorityBadge, Avatar } from '@/components/ui'
+import { PriorityBadge } from '@/components/ui'
+import { Assignees, type MemberInfo } from '@/components/assignees'
 import { TaskDetail } from '@/components/task-detail'
 import { CreateTaskButton } from '@/components/create-task'
 import { IconFilter, IconCheck } from '@/components/icons'
@@ -33,11 +34,9 @@ import { IconFilter, IconCheck } from '@/components/icons'
 export type BoardTask = Task & {
   projectName: string | null
   projectColor: string | null
-  assigneeName: string | null
-  assigneeColor: string | null
 }
 
-type Member = { id: string; username: string | null }
+type Member = MemberInfo
 
 const COLUMN_DOT: Record<TaskStatus, string> = {
   da_fare: 'bg-[#9CA5B3]',
@@ -49,10 +48,12 @@ const COLUMN_DOT: Record<TaskStatus, string> = {
 function TaskCard({
   task,
   members,
+  membersById,
   overlay = false,
 }: {
   task: BoardTask
   members: Member[]
+  membersById: Map<string, MemberInfo>
   overlay?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -85,14 +86,7 @@ function TaskCard({
         )}
         <div className="mt-2 flex items-center justify-between gap-2">
           <PriorityBadge level={task.priority_level} />
-          {task.assigneeName ? (
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Avatar name={task.assigneeName} size={22} color={task.assigneeColor} />
-              <span className="truncate text-[11px] font-semibold text-[#5A6473]">{task.assigneeName}</span>
-            </span>
-          ) : (
-            <span className="text-[11px] font-semibold text-[#C4CBD6]">Non assegnata</span>
-          )}
+          <Assignees ids={task.assignee_ids} membersById={membersById} withName />
         </div>
       </div>
       {!overlay && (
@@ -107,9 +101,7 @@ function TaskCard({
             priority_level: task.priority_level,
             status: task.status,
             due_date: task.due_date,
-            assignee_id: task.assignee_id,
-            assigneeName: task.assigneeName,
-            assigneeColor: task.assigneeColor,
+            assignee_ids: task.assignee_ids,
           }}
           members={members}
           open={detail}
@@ -124,10 +116,12 @@ function Column({
   status,
   tasks,
   members,
+  membersById,
 }: {
   status: TaskStatus
   tasks: BoardTask[]
   members: Member[]
+  membersById: Map<string, MemberInfo>
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status, data: { type: 'column', status } })
   return (
@@ -146,7 +140,7 @@ function Column({
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((t) => (
-            <TaskCard key={t.id} task={t} members={members} />
+            <TaskCard key={t.id} task={t} members={members} membersById={membersById} />
           ))}
         </SortableContext>
         {tasks.length === 0 && <p className="py-6 text-center text-[11px] font-medium text-[#C4CBD6]">trascina qui</p>}
@@ -180,6 +174,8 @@ export function TaskBoard({
     setTasks(initialTasks)
   }, [initialTasks])
 
+  const membersById = useMemo(() => new Map<string, MemberInfo>(members.map((m) => [m.id, m])), [members])
+
   const projects = useMemo(() => {
     const map = new Map<string, string>()
     for (const t of tasks) if (t.project_id && t.projectName) map.set(t.project_id, t.projectName)
@@ -189,7 +185,7 @@ export function TaskBoard({
   const filtered = useMemo(
     () =>
       tasks.filter(
-        (t) => (!mineOnly || t.assignee_id === meId) && (!projectFilter || t.project_id === projectFilter),
+        (t) => (!mineOnly || t.assignee_ids.includes(meId)) && (!projectFilter || t.project_id === projectFilter),
       ),
     [tasks, mineOnly, projectFilter, meId],
   )
@@ -317,12 +313,13 @@ export function TaskBoard({
               key={status}
               status={status}
               members={members}
+              membersById={membersById}
               tasks={filtered.filter((t) => t.status === status).sort((a, b) => a.position - b.position)}
             />
           ))}
         </motion.div>
       </div>
-      <DragOverlay>{active ? <TaskCard task={active} members={members} overlay /> : null}</DragOverlay>
+      <DragOverlay>{active ? <TaskCard task={active} members={members} membersById={membersById} overlay /> : null}</DragOverlay>
     </DndContext>
   )
 }

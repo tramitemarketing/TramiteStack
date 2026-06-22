@@ -21,7 +21,7 @@ import { IconBack, IconTrash, IconClock } from '@/components/icons'
 
 export const dynamic = 'force-dynamic'
 
-type TaskRow = Task & { assignee: { username: string | null; color: string | null } | null }
+type TaskRow = Task
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -34,13 +34,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const [{ data: tasks }, { data: members }] = await Promise.all([
     supabase
       .from('tasks')
-      .select('*, assignee:profiles!assignee_id(username, color)')
+      .select('*')
       .eq('project_id', id)
       .order('position'),
-    supabase.from('profiles').select('id, username').eq('active', true).order('username'),
+    supabase.from('profiles').select('id, username, color').eq('active', true).order('username'),
   ])
   const taskRows = (tasks as TaskRow[] | null) ?? []
-  const memberList = (members as Pick<Profile, 'id' | 'username'>[] | null) ?? []
+  const memberList = (members as Pick<Profile, 'id' | 'username' | 'color'>[] | null) ?? []
 
   return (
     <div className="space-y-5">

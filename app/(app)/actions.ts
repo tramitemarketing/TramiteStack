@@ -87,7 +87,7 @@ export async function createTask(formData: FormData) {
   const projectId = String(formData.get('project_id'))
   const title = String(formData.get('title') ?? '').trim()
   if (!title || !projectId) return
-  const assigneeId = String(formData.get('assignee_id') ?? '') || null
+  const assignees = formData.getAll('assignee_ids').map(String).filter(Boolean)
   const { data: created } = await supabase
     .from('tasks')
     .insert({
@@ -95,23 +95,29 @@ export async function createTask(formData: FormData) {
       title,
       description: String(formData.get('description') ?? '') || null,
       priority_level: clampPriority(formData.get('priority_level')),
-      assignee_id: assigneeId,
+      assignee_ids: assignees,
       due_date: String(formData.get('due_date') ?? '') || null,
     })
     .select('id')
     .single()
 
-  // Notifica all'assegnatario (se diverso da chi crea)
+  // Notifica a ogni assegnatario (escluso chi crea)
   const actor = await currentUserId()
-  if (assigneeId && assigneeId !== actor && created?.id) {
-    await supabase.rpc('create_notification', {
-      p_user_id: assigneeId,
-      p_type: 'task_assegnata',
-      p_title: 'Nuova task assegnata',
-      p_body: title,
-      p_entity_type: 'task',
-      p_entity_id: created.id,
-    })
+  if (created?.id) {
+    await Promise.all(
+      assignees
+        .filter((a) => a !== actor)
+        .map((a) =>
+          supabase.rpc('create_notification', {
+            p_user_id: a,
+            p_type: 'task_assegnata',
+            p_title: 'Nuova task assegnata',
+            p_body: title,
+            p_entity_type: 'task',
+            p_entity_id: created.id,
+          }),
+        ),
+    )
   }
 
   revalidatePath(`/projects/${projectId}`)
@@ -176,11 +182,11 @@ export async function updateTask(formData: FormData) {
   const id = String(formData.get('id'))
   const title = String(formData.get('title') ?? '').trim()
   if (!id || !title) return
-  const assigneeId = String(formData.get('assignee_id') ?? '') || null
+  const assignees = formData.getAll('assignee_ids').map(String).filter(Boolean)
 
-  // Assegnatario precedente (per notificare solo i cambi reali)
-  const { data: prev } = await supabase.from('tasks').select('assignee_id').eq('id', id).maybeSingle()
-  const prevAssignee = (prev as { assignee_id: string | null } | null)?.assignee_id ?? null
+  // Assegnatari precedenti (per notificare solo i nuovi)
+  const { data: prev } = await supabase.from('tasks').select('assignee_ids').eq('id', id).maybeSingle()
+  const prevSet = new Set((prev as { assignee_ids: string[] | null } | null)?.assignee_ids ?? [])
 
   await supabase
     .from('tasks')
@@ -189,21 +195,25 @@ export async function updateTask(formData: FormData) {
       description: String(formData.get('description') ?? '') || null,
       priority_level: clampPriority(formData.get('priority_level')),
       due_date: String(formData.get('due_date') ?? '') || null,
-      assignee_id: assigneeId,
+      assignee_ids: assignees,
     })
     .eq('id', id)
 
   const actor = await currentUserId()
-  if (assigneeId && assigneeId !== prevAssignee && assigneeId !== actor) {
-    await supabase.rpc('create_notification', {
-      p_user_id: assigneeId,
-      p_type: 'task_assegnata',
-      p_title: 'Task assegnata a te',
-      p_body: title,
-      p_entity_type: 'task',
-      p_entity_id: id,
-    })
-  }
+  await Promise.all(
+    assignees
+      .filter((a) => !prevSet.has(a) && a !== actor)
+      .map((a) =>
+        supabase.rpc('create_notification', {
+          p_user_id: a,
+          p_type: 'task_assegnata',
+          p_title: 'Task assegnata a te',
+          p_body: title,
+          p_entity_type: 'task',
+          p_entity_id: id,
+        }),
+      ),
+  )
 
   revalidatePath('/tasks')
   revalidatePath('/calendar')

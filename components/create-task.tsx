@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createTask } from '@/app/(app)/actions'
 import { IconPlus } from '@/components/icons'
+import { AssigneeCheckboxes } from '@/components/assignee-checkboxes'
+import type { MemberInfo } from '@/components/assignees'
 
 const inputCls =
   'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-base outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
@@ -16,7 +18,7 @@ export function CreateTaskButton({
   defaultProjectId,
 }: {
   projects: { id: string; name: string }[]
-  members: { id: string; username: string | null }[]
+  members: MemberInfo[]
   defaultProjectId?: string
 }) {
   const [open, setOpen] = useState(false)
@@ -99,13 +101,8 @@ export function CreateTaskButton({
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>Assegnatario</label>
-                  <select name="assignee_id" className={inputCls} defaultValue="">
-                    <option value="">Nessuno</option>
-                    {members.map((m) => (
-                      <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>
-                    ))}
-                  </select>
+                  <label className={labelCls}>Assegnatari</label>
+                  <AssigneeCheckboxes members={members} />
                 </div>
                 <button
                   type="submit"

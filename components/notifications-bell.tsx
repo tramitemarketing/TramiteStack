@@ -20,7 +20,7 @@ export function NotificationsBell({ meId }: { meId: string }) {
     const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
     const [{ data: n }, { data: d }] = await Promise.all([
       supabase.from('notifications').select('id, type, title, body, created_at, read_at').eq('user_id', meId).order('created_at', { ascending: false }).limit(20),
-      supabase.from('tasks').select('id, title, due_date').eq('assignee_id', meId).neq('status', 'completato').in('due_date', [today, tomorrow]),
+      supabase.from('tasks').select('id, title, due_date').contains('assignee_ids', [meId]).neq('status', 'completato').in('due_date', [today, tomorrow]),
     ])
     setNotifs((n as Notif[]) ?? [])
     setDue((d as Due[]) ?? [])

@@ -5,7 +5,9 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { updateTask, deleteTask } from '@/app/(app)/actions'
-import { PriorityBadge, TaskStatusBadge, Avatar } from '@/components/ui'
+import { PriorityBadge, TaskStatusBadge } from '@/components/ui'
+import { Assignees, type MemberInfo } from '@/components/assignees'
+import { AssigneeCheckboxes } from '@/components/assignee-checkboxes'
 import { IconTrash, IconEdit, IconClock } from '@/components/icons'
 import { formatDate } from '@/lib/utils'
 import type { TaskStatus } from '@/types/database'
@@ -20,9 +22,7 @@ export type DetailTask = {
   priority_level: number
   status: TaskStatus
   due_date: string | null
-  assignee_id: string | null
-  assigneeName: string | null
-  assigneeColor: string | null
+  assignee_ids: string[]
 }
 
 const inputCls =
@@ -40,7 +40,7 @@ export function TaskDetail({
   onClose,
 }: {
   task: DetailTask
-  members: { id: string; username: string | null }[]
+  members: MemberInfo[]
   open: boolean
   onClose: () => void
 }) {
@@ -58,6 +58,7 @@ export function TaskDetail({
   }
 
   const tagColor = task.projectColor || 'var(--brand)'
+  const membersById = new Map<string, MemberInfo>(members.map((m) => [m.id, m]))
 
   function onSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -127,11 +128,8 @@ export function TaskDetail({
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>Assegnatario</label>
-                  <select name="assignee_id" className={inputCls} defaultValue={task.assignee_id ?? ''}>
-                    <option value="">Nessuno</option>
-                    {members.map((m) => <option key={m.id} value={m.id}>{m.username || 'Utente'}</option>)}
-                  </select>
+                  <label className={labelCls}>Assegnatari</label>
+                  <AssigneeCheckboxes members={members} selected={task.assignee_ids} />
                 </div>
                 <div className="flex gap-2 pt-1">
                   <button type="button" onClick={() => setEditing(false)} className="press rounded-[10px] px-4 py-3 font-bold text-[#5A6473] ring-1 ring-[#E0E4EB]">Annulla</button>
@@ -151,11 +149,10 @@ export function TaskDetail({
                       <IconClock size={14} /> {formatDate(task.due_date, 'd MMM yyyy')}
                     </span>
                   )}
-                  {task.assigneeName && (
-                    <span className="flex items-center gap-1.5 text-xs font-semibold text-[#5A6473]">
-                      <Avatar name={task.assigneeName} size={20} color={task.assigneeColor} /> {task.assigneeName}
-                    </span>
-                  )}
+                </div>
+                <div>
+                  <p className={labelCls}>Assegnatari</p>
+                  <Assignees ids={task.assignee_ids} membersById={membersById} size={26} />
                 </div>
                 <div>
                   <p className={labelCls}>Descrizione</p>

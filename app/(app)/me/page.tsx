@@ -33,7 +33,7 @@ export default async function PersonalAreaPage() {
     supabase
       .from('tasks')
       .select('id, title, status, updated_at, project_id, projects(name)')
-      .eq('assignee_id', me.id),
+      .contains('assignee_ids', [me.id]),
     supabase
       .from('transactions')
       .select('id, type, amount, description, occurred_on, created_at')

@@ -23,32 +23,34 @@ export async function GET(request: NextRequest) {
 
   const { data: tasks } = await supabase
     .from('tasks')
-    .select('id, title, due_date, assignee_id')
+    .select('id, title, due_date, assignee_ids')
     .neq('status', 'completato')
-    .not('assignee_id', 'is', null)
     .lte('due_date', limit)
 
   let created = 0
-  for (const t of tasks ?? []) {
-    // Evita duplicati per lo stesso task
-    const { data: existing } = await supabase
-      .from('notifications')
-      .select('id')
-      .eq('entity_type', 'task')
-      .eq('entity_id', t.id)
-      .is('read_at', null)
-      .maybeSingle()
-    if (existing) continue
+  for (const t of (tasks ?? []) as { id: string; title: string; due_date: string; assignee_ids: string[] }[]) {
+    for (const uid of t.assignee_ids ?? []) {
+      // Evita duplicati per lo stesso task e utente
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('entity_type', 'task')
+        .eq('entity_id', t.id)
+        .eq('user_id', uid)
+        .is('read_at', null)
+        .maybeSingle()
+      if (existing) continue
 
-    await supabase.from('notifications').insert({
-      user_id: t.assignee_id,
-      type: 'promemoria',
-      title: 'Task in scadenza',
-      body: `"${t.title}" scade il ${t.due_date}`,
-      entity_type: 'task',
-      entity_id: t.id,
-    })
-    created++
+      await supabase.from('notifications').insert({
+        user_id: uid,
+        type: 'promemoria',
+        title: 'Task in scadenza',
+        body: `"${t.title}" scade il ${t.due_date}`,
+        entity_type: 'task',
+        entity_id: t.id,
+      })
+      created++
+    }
   }
 
   return NextResponse.json({ ok: true, created })

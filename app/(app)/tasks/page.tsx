@@ -9,7 +9,6 @@ export const dynamic = 'force-dynamic'
 
 type Row = Task & {
   projects: { name: string; color: string | null } | null
-  assignee: { username: string | null; color: string | null } | null
 }
 
 export default async function TasksPage() {
@@ -18,10 +17,10 @@ export default async function TasksPage() {
   const [{ data }, { data: projects }, { data: members }] = await Promise.all([
     supabase
       .from('tasks')
-      .select('*, projects(name, color), assignee:profiles!assignee_id(username, color)')
+      .select('*, projects(name, color)')
       .order('position', { ascending: true }),
     supabase.from('projects').select('id, name').order('name'),
-    supabase.from('profiles').select('id, username').eq('active', true).order('username'),
+    supabase.from('profiles').select('id, username, color').eq('active', true).order('username'),
   ])
 
   const rows = (data as Row[] | null) ?? []
@@ -29,11 +28,9 @@ export default async function TasksPage() {
     ...t,
     projectName: t.projects?.name ?? null,
     projectColor: t.projects?.color ?? null,
-    assigneeName: t.assignee?.username ?? null,
-    assigneeColor: t.assignee?.color ?? null,
   }))
   const projList = (projects as Pick<Project, 'id' | 'name'>[] | null) ?? []
-  const memberList = (members as Pick<Profile, 'id' | 'username'>[] | null) ?? []
+  const memberList = (members as Pick<Profile, 'id' | 'username' | 'color'>[] | null) ?? []
 
   // Senza progetti non si possono creare task: mostra lo stato vuoto dedicato.
   if (projList.length === 0) {

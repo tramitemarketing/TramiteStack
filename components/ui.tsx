@@ -13,13 +13,15 @@ export function Card({
   className,
   style,
   children,
+  onClick,
 }: {
   className?: string
   style?: React.CSSProperties
   children: React.ReactNode
+  onClick?: () => void
 }) {
   return (
-    <div className={cn('rounded-xl bg-white p-4 ring-1 ring-[#E0E4EB] shadow-[0_1px_2px_rgba(16,40,80,0.04)]', className)} style={style}>
+    <div className={cn('rounded-xl bg-white p-4 ring-1 ring-[#E0E4EB] shadow-[0_1px_2px_rgba(16,40,80,0.04)]', className)} style={style} onClick={onClick}>
       {children}
     </div>
   )

@@ -30,6 +30,7 @@ export async function createProject(formData: FormData) {
       description: String(formData.get('description') ?? '') || null,
       status: String(formData.get('status') ?? 'attivo') as ProjectStatus,
       priority_level: clampPriority(formData.get('priority_level')),
+      color: String(formData.get('color') ?? '') || null,
       due_date: String(formData.get('due_date') ?? '') || null,
     })
     .select('id')
@@ -71,6 +72,7 @@ export async function updateProject(formData: FormData) {
       description: String(formData.get('description') ?? '') || null,
       status: String(formData.get('status') ?? 'attivo') as ProjectStatus,
       priority_level: clampPriority(formData.get('priority_level')),
+      color: String(formData.get('color') ?? '') || null,
       due_date: String(formData.get('due_date') ?? '') || null,
     })
     .eq('id', id)
@@ -184,6 +186,7 @@ export async function updateTask(formData: FormData) {
     .from('tasks')
     .update({
       title,
+      description: String(formData.get('description') ?? '') || null,
       priority_level: clampPriority(formData.get('priority_level')),
       due_date: String(formData.get('due_date') ?? '') || null,
       assignee_id: assigneeId,

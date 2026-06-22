@@ -5,7 +5,9 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { updateProject } from '@/app/(app)/actions'
+import { cn } from '@/lib/utils'
 import { IconDots } from '@/components/icons'
+import { ColorSwatches } from '@/components/color-swatches'
 import { PROJECT_STATUS_LABEL, type Project } from '@/types/database'
 
 const inputCls =
@@ -14,8 +16,10 @@ const labelCls = 'mb-1 block text-xs font-bold text-[#5A6473]'
 
 export function EditProject({
   project,
+  triggerClassName,
 }: {
-  project: Pick<Project, 'id' | 'name' | 'description' | 'status' | 'priority_level' | 'due_date'>
+  project: Pick<Project, 'id' | 'name' | 'description' | 'status' | 'priority_level' | 'color' | 'due_date'>
+  triggerClassName?: string
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -85,6 +89,10 @@ export function EditProject({
                 <label className={labelCls}>Scadenza</label>
                 <input type="date" name="due_date" className={inputCls} defaultValue={project.due_date ?? ''} />
               </div>
+              <div>
+                <label className={labelCls}>Colore</label>
+                <ColorSwatches name="color" value={project.color} />
+              </div>
               <button type="submit" disabled={pending} className="press w-full rounded-xl px-4 py-3 font-semibold text-white disabled:opacity-60" style={{ backgroundColor: 'var(--brand)' }}>
                 {pending ? 'Salvataggio…' : 'Salva modifiche'}
               </button>
@@ -100,7 +108,7 @@ export function EditProject({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="press flex h-9 w-9 items-center justify-center rounded-[10px] text-[#3E4757] hover:bg-[#EFF1F5]"
+        className={cn('press flex h-9 w-9 items-center justify-center rounded-[10px]', triggerClassName || 'text-[#3E4757] hover:bg-[#EFF1F5]')}
         aria-label="Modifica progetto"
       >
         <IconDots size={20} />

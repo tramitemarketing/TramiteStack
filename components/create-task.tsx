@@ -70,6 +70,10 @@ export function CreateTaskButton({
                   <input name="title" required className={inputCls} placeholder="Titolo del task" autoFocus />
                 </div>
                 <div>
+                  <label className={labelCls}>Descrizione</label>
+                  <textarea name="description" rows={3} className={inputCls} placeholder="Dettagli, note, link…" />
+                </div>
+                <div>
                   <label className={labelCls}>Progetto <span className="text-danger">*</span></label>
                   <select name="project_id" required className={inputCls} defaultValue={defaultProjectId ?? ''}>
                     <option value="" disabled>Seleziona progetto…</option>

@@ -16,7 +16,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { motion } from 'framer-motion'
-import { reorderTasks, deleteTask } from '@/app/(app)/actions'
+import { reorderTasks } from '@/app/(app)/actions'
 import { cn } from '@/lib/utils'
 import {
   TASK_STATUS_ORDER,
@@ -26,13 +26,13 @@ import {
   type TaskStatus,
 } from '@/types/database'
 import { PriorityBadge, Avatar } from '@/components/ui'
-import { SubmitIcon } from '@/components/submit-button'
-import { EditTask } from '@/components/edit-task'
+import { TaskDetail } from '@/components/task-detail'
 import { CreateTaskButton } from '@/components/create-task'
-import { IconTrash, IconFilter, IconCheck } from '@/components/icons'
+import { IconFilter, IconCheck } from '@/components/icons'
 
 export type BoardTask = Task & {
   projectName: string | null
+  projectColor: string | null
   assigneeName: string | null
   assigneeColor: string | null
 }
@@ -45,23 +45,6 @@ const COLUMN_DOT: Record<TaskStatus, string> = {
   in_revisione: 'bg-[#7C5CD6]',
   completato: 'bg-[#1F8A5B]',
 }
-
-// Colore morbido del tag progetto (deterministico dal nome)
-const TAG_PALETTE = [
-  'bg-[#EEF5FC] text-[#2A78C2]',
-  'bg-[#EFF1F5] text-[#5A6473]',
-  'bg-[#FBEAE6] text-[#D8553F]',
-  'bg-[#FDF4DD] text-[#C8932B]',
-  'bg-[#EFE8FB] text-[#7C5CD6]',
-  'bg-[#E6F3EC] text-[#1F8A5B]',
-]
-function tagStyle(name: string) {
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
-  return TAG_PALETTE[h % TAG_PALETTE.length]
-}
-
-const stop = (e: React.PointerEvent) => e.stopPropagation()
 
 function TaskCard({
   task,
@@ -76,13 +59,16 @@ function TaskCard({
     id: task.id,
     data: { status: task.status },
   })
+  const [detail, setDetail] = useState(false)
   const style = overlay ? undefined : { transform: CSS.Transform.toString(transform), transition }
+  const tagColor = task.projectColor || '#2A78C2'
   return (
     <div
       ref={overlay ? undefined : setNodeRef}
       style={style}
       {...(overlay ? {} : attributes)}
       {...(overlay ? {} : listeners)}
+      onClick={overlay ? undefined : () => setDetail(true)}
       className={cn(
         'group relative rounded-[10px] bg-white p-3 ring-1 ring-[#E0E4EB] shadow-[0_1px_2px_rgba(16,40,80,0.04)] touch-none select-none',
         isDragging && !overlay && 'opacity-30',
@@ -91,23 +77,9 @@ function TaskCard({
     >
       <div className={cn('absolute left-0 top-3 h-[calc(100%-1.5rem)] w-1 rounded-full', priorityColor(task.priority_level))} />
       <div className="pl-2">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-[13px] font-bold leading-snug text-[#1A1F2B]">{task.title}</p>
-          {!overlay && (
-            <div className="flex shrink-0 items-center">
-              <EditTask task={task} members={members} />
-              <form action={deleteTask} onPointerDown={stop}>
-                <input type="hidden" name="id" value={task.id} />
-                <input type="hidden" name="project_id" value={task.project_id} />
-                <SubmitIcon label="Elimina task" className="p-1 text-[#C4CBD6] transition hover:text-[#D8553F]">
-                  <IconTrash size={16} />
-                </SubmitIcon>
-              </form>
-            </div>
-          )}
-        </div>
+        <p className="truncate text-[13px] font-bold leading-snug text-[#1A1F2B]">{task.title}</p>
         {task.projectName && (
-          <span className={cn('mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-bold', tagStyle(task.projectName))}>
+          <span className="mt-1.5 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-bold" style={{ backgroundColor: `${tagColor}22`, color: tagColor }}>
             {task.projectName}
           </span>
         )}
@@ -123,6 +95,27 @@ function TaskCard({
           )}
         </div>
       </div>
+      {!overlay && (
+        <TaskDetail
+          task={{
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            project_id: task.project_id,
+            projectName: task.projectName,
+            projectColor: task.projectColor,
+            priority_level: task.priority_level,
+            status: task.status,
+            due_date: task.due_date,
+            assignee_id: task.assignee_id,
+            assigneeName: task.assigneeName,
+            assigneeColor: task.assigneeColor,
+          }}
+          members={members}
+          open={detail}
+          onClose={() => setDetail(false)}
+        />
+      )}
     </div>
   )
 }

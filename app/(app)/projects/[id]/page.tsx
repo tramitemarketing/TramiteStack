@@ -4,11 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import {
   Card,
   ProjectStatusBadge,
-  TaskStatusBadge,
   PriorityBadge,
   ProgressBar,
   EmptyState,
-  Avatar,
 } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { type Project, type Task, type Profile } from '@/types/database'
@@ -17,7 +15,7 @@ import { CreateTaskButton } from '@/components/create-task'
 import { AttachmentsPanel } from '@/components/attachments-panel'
 import { SubmitButton } from '@/components/submit-button'
 import { EditProject } from '@/components/edit-project'
-import { EditTask } from '@/components/edit-task'
+import { ProjectTaskItem } from '@/components/project-task-item'
 import { EmptyTasks } from '@/components/illustrations'
 import { IconBack, IconTrash, IconClock } from '@/components/icons'
 
@@ -46,19 +44,24 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-5">
-      {/* Header dettaglio: indietro + titolo + ⋮ */}
-      <header className="flex items-center gap-2">
-        <Link href="/projects" className="press -ml-1 flex h-9 w-9 items-center justify-center rounded-[10px] text-[#3E4757] hover:bg-[#EFF1F5]" aria-label="Indietro">
-          <IconBack size={22} />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="font-display text-[19px] font-extrabold leading-tight tracking-tight text-navy">{p.name}</h1>
-          <p className="text-[11px] font-semibold text-[#9CA5B3]">
-            {taskRows.length} task · {p.status.replace('_', ' ')}
-          </p>
+      {/* Header dettaglio colorato: indietro + titolo + ⋮ */}
+      <header
+        className="-mx-4 -mt-5 px-4 pb-4 text-white"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)', backgroundColor: p.color || '#0F4C81' }}
+      >
+        <div className="flex items-center gap-2">
+          <Link href="/projects" className="press -ml-1 flex h-9 w-9 items-center justify-center rounded-[10px] text-white hover:bg-white/10" aria-label="Indietro">
+            <IconBack size={22} />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-[19px] font-extrabold leading-tight tracking-tight text-white">{p.name}</h1>
+            <p className="text-[11px] font-semibold text-white/75">
+              {taskRows.length} task · {p.status.replace('_', ' ')}
+            </p>
+          </div>
+          <ProjectStatusBadge status={p.status} />
+          <EditProject project={p} triggerClassName="text-white hover:bg-white/10" />
         </div>
-        <ProjectStatusBadge status={p.status} />
-        <EditProject project={p} />
       </header>
 
       {/* Meta */}
@@ -97,26 +100,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         ) : (
           <div className="space-y-2">
             {taskRows.map((t) => (
-              <Card key={t.id} className="p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-bold text-[#1A1F2B]">{t.title}</p>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <TaskStatusBadge status={t.status} />
-                    <EditTask task={t} members={memberList} />
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <PriorityBadge level={t.priority_level} />
-                  <div className="flex items-center gap-2.5">
-                    {t.due_date && <span className="text-[11px] font-semibold text-[#9CA5B3]">{formatDate(t.due_date, 'd MMM')}</span>}
-                    {t.assignee?.username && (
-                      <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5A6473]">
-                        <Avatar name={t.assignee.username} size={20} color={t.assignee.color} /> {t.assignee.username}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Card>
+              <ProjectTaskItem key={t.id} task={t} members={memberList} projectName={p.name} projectColor={p.color} />
             ))}
           </div>
         )}

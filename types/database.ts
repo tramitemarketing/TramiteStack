@@ -35,6 +35,7 @@ export interface Project {
   description: string | null
   status: ProjectStatus
   priority_level: number // 1–5
+  color: string | null
   start_date: string | null
   due_date: string | null
   budget_amount: number

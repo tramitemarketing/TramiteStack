@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createProject } from '@/app/(app)/actions'
 import { Card, PageHeader } from '@/components/ui'
 import { SubmitButton } from '@/components/submit-button'
+import { ColorSwatches } from '@/components/color-swatches'
 import { PROJECT_STATUS_LABEL } from '@/types/database'
 
 const inputCls =
@@ -44,6 +45,10 @@ export default function NewProjectPage() {
           <div>
             <label className="mb-1 block text-sm font-semibold">Scadenza</label>
             <input type="date" name="due_date" className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold">Colore</label>
+            <ColorSwatches name="color" />
           </div>
           <div className="flex gap-2 pt-2">
             <SubmitButton pendingLabel="Creazione…" className="flex-1 rounded-[10px] px-4 py-3 font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>

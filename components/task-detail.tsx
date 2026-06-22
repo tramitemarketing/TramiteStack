@@ -9,6 +9,7 @@ import { PriorityBadge, TaskStatusBadge } from '@/components/ui'
 import { Assignees, type MemberInfo } from '@/components/assignees'
 import { AssigneeCheckboxes } from '@/components/assignee-checkboxes'
 import { IconTrash, IconEdit, IconClock } from '@/components/icons'
+import { TaskComments } from '@/components/task-comments'
 import { formatDate } from '@/lib/utils'
 import type { TaskStatus } from '@/types/database'
 
@@ -161,6 +162,9 @@ export function TaskDetail({
                   ) : (
                     <p className="text-sm font-medium text-[#9CA5B3]">Nessuna descrizione.</p>
                   )}
+                </div>
+                <div className="border-t border-[#EFF1F5] pt-3">
+                  <TaskComments taskId={task.id} />
                 </div>
                 <div className="flex gap-2 pt-1">
                   <button onClick={onDelete} disabled={pending} className="press flex items-center gap-1.5 rounded-[10px] px-4 py-3 font-bold text-danger ring-1 ring-[#F2C7BD] disabled:opacity-60">

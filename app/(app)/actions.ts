@@ -143,6 +143,15 @@ export async function reorderTasks(items: { id: string; status: TaskStatus; posi
   revalidatePath('/calendar')
 }
 
+// Cambio stato di una singola task (box nei Progetti)
+export async function changeTaskStatus(taskId: string, status: TaskStatus, projectId?: string) {
+  const supabase = await createClient()
+  await supabase.from('tasks').update({ status }).eq('id', taskId)
+  revalidatePath('/tasks')
+  revalidatePath('/calendar')
+  if (projectId) revalidatePath(`/projects/${projectId}`)
+}
+
 // Presa in carico: assegna la task all'utente corrente
 export async function claimTask(formData: FormData) {
   const supabase = await createClient()

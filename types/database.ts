@@ -13,6 +13,7 @@ export interface Profile {
   role: UserRole
   avatar_url: string | null
   color: string | null
+  completed_tasks_count: number
   active: boolean
   created_at: string
   updated_at: string

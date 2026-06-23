@@ -10,6 +10,7 @@ import { Assignees, type MemberInfo } from '@/components/assignees'
 import { AssigneeCheckboxes } from '@/components/assignee-checkboxes'
 import { IconTrash, IconEdit, IconClock } from '@/components/icons'
 import { TaskComments } from '@/components/task-comments'
+import { TaskChecklist } from '@/components/task-checklist'
 import { formatDate } from '@/lib/utils'
 import type { TaskStatus } from '@/types/database'
 
@@ -162,6 +163,9 @@ export function TaskDetail({
                   ) : (
                     <p className="text-sm font-medium text-[#9CA5B3]">Nessuna descrizione.</p>
                   )}
+                </div>
+                <div className="border-t border-[#EFF1F5] pt-3">
+                  <TaskChecklist taskId={task.id} />
                 </div>
                 <div className="border-t border-[#EFF1F5] pt-3">
                   <TaskComments taskId={task.id} members={members} />

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireProfile } from '@/lib/auth'
 import { Card, Avatar, EmptyState } from '@/components/ui'
-import { IconBack, IconCheck, IconUp, IconDown, IconCalendar } from '@/components/icons'
+import { IconBack, IconCheck, IconUp, IconDown, IconCalendar, IconProjects } from '@/components/icons'
 import { formatEuro, formatDate, cn } from '@/lib/utils'
 import type { Task, Transaction, CalendarEvent, TaskStatus } from '@/types/database'
 
@@ -23,17 +23,18 @@ const STAT_LABEL: Record<TaskStatus, string> = {
   completato: 'Completate',
 }
 
-type Activity = { id: string; date: string; kind: 'task' | 'entrata' | 'uscita' | 'evento'; text: string; amount?: number }
+type Activity = { id: string; date: string; kind: 'task' | 'entrata' | 'uscita' | 'evento' | 'progetto'; text: string; amount?: number }
 
 export default async function PersonalAreaPage() {
   const me = await requireProfile()
   const supabase = await createClient()
 
-  const [{ data: tasksData }, { data: txData }, { data: evData }] = await Promise.all([
+  const [{ data: tasksData }, { data: txData }, { data: evData }, { data: archProj }] = await Promise.all([
     supabase
       .from('tasks')
       .select('id, title, status, updated_at, project_id, projects(name)')
-      .contains('assignee_ids', [me.id]),
+      .contains('assignee_ids', [me.id])
+      .is('archived_at', null),
     supabase
       .from('transactions')
       .select('id, type, amount, description, occurred_on, created_at')
@@ -46,14 +47,20 @@ export default async function PersonalAreaPage() {
       .eq('created_by', me.id)
       .order('created_at', { ascending: false })
       .limit(20),
+    supabase
+      .from('archived_projects')
+      .select('id, name, archived_at')
+      .order('archived_at', { ascending: false })
+      .limit(20),
   ])
 
   const myTasks = (tasksData as MyTask[] | null) ?? []
   const myTx = (txData as Pick<Transaction, 'id' | 'type' | 'amount' | 'description' | 'occurred_on' | 'created_at'>[] | null) ?? []
   const myEv = (evData as Pick<CalendarEvent, 'id' | 'title' | 'starts_at' | 'created_at'>[] | null) ?? []
+  const archivedProjects = (archProj as { id: string; name: string; archived_at: string }[] | null) ?? []
 
-  // Statistiche task per stato
-  const counts: Record<TaskStatus, number> = { da_fare: 0, in_corso: 0, in_revisione: 0, completato: 0 }
+  // Statistiche task per stato (le completate includono quelle già archiviate dallo storico)
+  const counts: Record<TaskStatus, number> = { da_fare: 0, in_corso: 0, in_revisione: 0, completato: me.completed_tasks_count }
   for (const t of myTasks) counts[t.status]++
 
   // Progetti coinvolti
@@ -74,6 +81,7 @@ export default async function PersonalAreaPage() {
       amount: Number(t.amount),
     })),
     ...myEv.map((e) => ({ id: 'ev' + e.id, date: e.created_at, kind: 'evento' as const, text: `Evento: ${e.title}` })),
+    ...archivedProjects.map((p) => ({ id: 'ap' + p.id, date: p.archived_at, kind: 'progetto' as const, text: `Progetto completato: ${p.name}` })),
   ]
     .sort((a, b) => (a.date < b.date ? 1 : -1))
     .slice(0, 15)
@@ -163,5 +171,7 @@ function ActivityIcon({ kind }: { kind: Activity['kind'] }) {
     return <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-[#E6F3EC] text-ok"><IconUp size={16} strokeWidth={2.4} /></span>
   if (kind === 'uscita')
     return <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-[#FBEAE6] text-danger"><IconDown size={16} strokeWidth={2.4} /></span>
+  if (kind === 'progetto')
+    return <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-[#EEF5FC] text-brand"><IconProjects size={16} /></span>
   return <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-[#EFE8FB] text-[#7C5CD6]"><IconCalendar size={16} /></span>
 }

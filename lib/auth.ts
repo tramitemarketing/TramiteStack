@@ -78,6 +78,7 @@ export async function requireProfile(): Promise<Profile> {
     role: 'member',
     avatar_url: null,
     color: null,
+    completed_tasks_count: 0,
     active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

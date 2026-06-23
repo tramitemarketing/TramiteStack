@@ -8,13 +8,15 @@ export const dynamic = 'force-dynamic'
 
 export default async function ProjectsPage() {
   const supabase = await createClient()
+  await supabase.rpc('archive_completed_projects')
   const [{ data }, { data: taskStatus }] = await Promise.all([
     supabase
       .from('projects')
       .select('*')
+      .is('archived_at', null)
       .order('priority_level', { ascending: true })
       .order('created_at', { ascending: false }),
-    supabase.from('tasks').select('project_id, status'),
+    supabase.from('tasks').select('project_id, status').is('archived_at', null),
   ])
 
   const rows = (data as Project[] | null) ?? []

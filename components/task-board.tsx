@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -9,12 +9,12 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  useDraggable,
   useDroppable,
   type DragStartEvent,
+  type DragOverEvent,
   type DragEndEvent,
 } from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { motion } from 'framer-motion'
 import { reorderTasks } from '@/app/(app)/actions'
 import { cn } from '@/lib/utils'
@@ -34,9 +34,12 @@ import { IconFilter, IconCheck } from '@/components/icons'
 export type BoardTask = Task & {
   projectName: string | null
   projectColor: string | null
+  checklistTotal?: number
+  checklistDone?: number
 }
 
 type Member = MemberInfo
+type Indicator = { status: TaskStatus; index: number }
 
 const COLUMN_DOT: Record<TaskStatus, string> = {
   da_fare: 'bg-[#9CA5B3]',
@@ -45,37 +48,13 @@ const COLUMN_DOT: Record<TaskStatus, string> = {
   completato: 'bg-[#1F8A5B]',
 }
 
-function TaskCard({
-  task,
-  members,
-  membersById,
-  overlay = false,
-}: {
-  task: BoardTask
-  members: Member[]
-  membersById: Map<string, MemberInfo>
-  overlay?: boolean
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: task.id,
-    data: { status: task.status },
-  })
-  const [detail, setDetail] = useState(false)
-  const style = overlay ? undefined : { transform: CSS.Transform.toString(transform), transition }
+// Contenuto visivo della card (condiviso tra card e overlay)
+function CardBody({ task, membersById }: { task: BoardTask; membersById: Map<string, MemberInfo> }) {
   const tagColor = task.projectColor || '#2A78C2'
+  const hasChecklist = (task.checklistTotal ?? 0) > 0
+  const pct = hasChecklist ? Math.round(((task.checklistDone ?? 0) / (task.checklistTotal as number)) * 100) : 0
   return (
-    <div
-      ref={overlay ? undefined : setNodeRef}
-      style={style}
-      {...(overlay ? {} : attributes)}
-      {...(overlay ? {} : listeners)}
-      onClick={overlay ? undefined : () => setDetail(true)}
-      className={cn(
-        'group relative rounded-[10px] bg-white p-3 ring-1 ring-[#E0E4EB] shadow-[0_1px_2px_rgba(16,40,80,0.04)] touch-none select-none',
-        isDragging && !overlay && 'opacity-30',
-        overlay && 'rotate-2 shadow-lg',
-      )}
-    >
+    <>
       <div className={cn('absolute left-0 top-3 h-[calc(100%-1.5rem)] w-1 rounded-full', priorityColor(task.priority_level))} />
       <div className="pl-2">
         <p className="truncate text-[13px] font-bold leading-snug text-[#1A1F2B]">{task.title}</p>
@@ -84,46 +63,74 @@ function TaskCard({
             {task.projectName}
           </span>
         )}
+        {hasChecklist && (
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EFF1F5]">
+              <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: pct === 100 ? 'var(--ok)' : 'var(--brand)' }} />
+            </div>
+            <span className="text-[10px] font-bold text-[#9CA5B3] tnum">{task.checklistDone}/{task.checklistTotal}</span>
+          </div>
+        )}
         <div className="mt-2 flex items-center justify-between gap-2">
           <PriorityBadge level={task.priority_level} />
           <Assignees ids={task.assignee_ids} membersById={membersById} withName />
         </div>
       </div>
-      {!overlay && (
-        <TaskDetail
-          task={{
-            id: task.id,
-            title: task.title,
-            description: task.description,
-            project_id: task.project_id,
-            projectName: task.projectName,
-            projectColor: task.projectColor,
-            priority_level: task.priority_level,
-            status: task.status,
-            due_date: task.due_date,
-            assignee_ids: task.assignee_ids,
-          }}
-          members={members}
-          open={detail}
-          onClose={() => setDetail(false)}
-        />
-      )}
+    </>
+  )
+}
+
+function DraggableCard({
+  task,
+  membersById,
+  disabled,
+  onOpen,
+}: {
+  task: BoardTask
+  membersById: Map<string, MemberInfo>
+  disabled: boolean
+  onOpen: () => void
+}) {
+  const { setNodeRef: setDragRef, attributes, listeners } = useDraggable({ id: task.id, data: { status: task.status }, disabled })
+  const { setNodeRef: setDropRef } = useDroppable({ id: task.id, data: { status: task.status } })
+  const setRef = useCallback(
+    (n: HTMLElement | null) => { setDragRef(n); setDropRef(n) },
+    [setDragRef, setDropRef],
+  )
+  return (
+    <div
+      ref={setRef}
+      {...attributes}
+      {...listeners}
+      onClick={onOpen}
+      className="group relative cursor-pointer touch-none select-none rounded-[10px] bg-white p-3 ring-1 ring-[#E0E4EB] shadow-[0_1px_2px_rgba(16,40,80,0.04)]"
+    >
+      <CardBody task={task} membersById={membersById} />
     </div>
   )
+}
+
+function DropLine() {
+  return <div className="my-1 h-[3px] rounded-full" style={{ backgroundColor: 'var(--brand)' }} />
 }
 
 function Column({
   status,
   tasks,
-  members,
   membersById,
+  indicator,
+  dragDisabled,
+  onOpen,
 }: {
   status: TaskStatus
   tasks: BoardTask[]
-  members: Member[]
   membersById: Map<string, MemberInfo>
+  indicator: Indicator | null
+  dragDisabled: boolean
+  onOpen: (t: BoardTask) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status, data: { type: 'column', status } })
+  const lineAt = (i: number) => indicator && indicator.status === status && indicator.index === i
   return (
     <div className="flex min-w-[244px] flex-1 flex-col">
       <div className="mb-2 flex items-center gap-2 px-1">
@@ -138,12 +145,14 @@ function Column({
           isOver ? 'bg-brand-50 ring-2 ring-[#B3D2F0]' : 'bg-[#EFF1F5]/70',
         )}
       >
-        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          {tasks.map((t) => (
-            <TaskCard key={t.id} task={t} members={members} membersById={membersById} />
-          ))}
-        </SortableContext>
-        {tasks.length === 0 && <p className="py-6 text-center text-[11px] font-medium text-[#C4CBD6]">trascina qui</p>}
+        {tasks.map((t, i) => (
+          <div key={t.id}>
+            {lineAt(i) && <DropLine />}
+            <DraggableCard task={t} membersById={membersById} disabled={dragDisabled} onOpen={() => onOpen(t)} />
+          </div>
+        ))}
+        {lineAt(tasks.length) && <DropLine />}
+        {tasks.length === 0 && !lineAt(0) && <p className="py-6 text-center text-[11px] font-medium text-[#C4CBD6]">trascina qui</p>}
       </div>
     </div>
   )
@@ -162,6 +171,9 @@ export function TaskBoard({
 }) {
   const [tasks, setTasks] = useState<BoardTask[]>(initialTasks)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [indicator, setIndicator] = useState<Indicator | null>(null)
+  const indicatorRef = useRef<Indicator | null>(null)
+  const [detailTask, setDetailTask] = useState<BoardTask | null>(null)
   const [, startTransition] = useTransition()
 
   // Filtri
@@ -173,6 +185,9 @@ export function TaskBoard({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTasks(initialTasks)
   }, [initialTasks])
+
+  // Tiene aperto il dettaglio sincronizzato coi dati aggiornati (realtime/refresh)
+  const detailLive = detailTask ? tasks.find((t) => t.id === detailTask.id) ?? null : null
 
   const membersById = useMemo(() => new Map<string, MemberInfo>(members.map((m) => [m.id, m])), [members])
 
@@ -191,57 +206,83 @@ export function TaskBoard({
   )
 
   const filtersActive = mineOnly || projectFilter !== ''
+  const detailOpen = detailTask !== null
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
   )
 
+  // Ids di una colonna (ordinati per posizione), escludendo un id.
+  const colIds = useCallback(
+    (status: TaskStatus, exclude: string) =>
+      filtered.filter((t) => t.status === status && t.id !== exclude).sort((a, b) => a.position - b.position).map((t) => t.id),
+    [filtered],
+  )
+
   function onDragStart(e: DragStartEvent) {
     setActiveId(String(e.active.id))
   }
 
-  function orderedIds(list: BoardTask[], status: TaskStatus) {
-    return list.filter((t) => t.status === status).sort((a, b) => a.position - b.position).map((t) => t.id)
+  function onDragOver(e: DragOverEvent) {
+    const { active, over } = e
+    if (!over) { setIndicator(null); indicatorRef.current = null; return }
+    const aid = String(active.id)
+    const overId = String(over.id)
+    let next: Indicator
+    if ((TASK_STATUS_ORDER as string[]).includes(overId)) {
+      const ids = colIds(overId as TaskStatus, aid)
+      next = { status: overId as TaskStatus, index: ids.length }
+    } else {
+      const overTask = tasks.find((t) => t.id === overId)
+      if (!overTask) return
+      const ids = colIds(overTask.status, aid)
+      const overIndex = ids.indexOf(overId)
+      if (overIndex < 0) {
+        next = { status: overTask.status, index: ids.length }
+      } else {
+        const ar = active.rect.current.translated
+        const orct = over.rect
+        const after = ar ? ar.top + ar.height / 2 > orct.top + orct.height / 2 : false
+        next = { status: overTask.status, index: after ? overIndex + 1 : overIndex }
+      }
+    }
+    indicatorRef.current = next
+    setIndicator(next)
+  }
+
+  function clearDrag() {
+    setActiveId(null)
+    setIndicator(null)
+    indicatorRef.current = null
   }
 
   function onDragEnd(e: DragEndEvent) {
-    setActiveId(null)
-    const id = String(e.active.id)
-    const over = e.over
-    if (!over) return
-    const overId = String(over.id)
-    const activeTask = tasks.find((t) => t.id === id)
+    const aid = String(e.active.id)
+    const ind = indicatorRef.current
+    clearDrag()
+    if (!ind) return
+    const activeTask = tasks.find((t) => t.id === aid)
     if (!activeTask) return
-
-    const isColumn = (TASK_STATUS_ORDER as string[]).includes(overId)
-    const overTask = isColumn ? null : tasks.find((t) => t.id === overId)
-    const targetStatus = (isColumn ? overId : overTask?.status) as TaskStatus
-    if (!targetStatus) return
-
+    const targetStatus = ind.status
     const sourceStatus = activeTask.status
 
-    // Lista target senza l'elemento attivo, poi inserimento all'indice giusto.
-    const targetIds = orderedIds(tasks, targetStatus).filter((x) => x !== id)
-    let insertIndex = isColumn ? targetIds.length : targetIds.indexOf(overId)
-    if (insertIndex < 0) insertIndex = targetIds.length
-    targetIds.splice(insertIndex, 0, id)
+    const targetIds = colIds(targetStatus, aid)
+    const idx = Math.max(0, Math.min(ind.index, targetIds.length))
+    targetIds.splice(idx, 0, aid)
 
-    // Nessun cambiamento reale → esci.
+    // Nessun cambiamento reale
     if (sourceStatus === targetStatus) {
-      const before = orderedIds(tasks, targetStatus)
+      const before = colIds(targetStatus, '')
       if (before.join() === targetIds.join()) return
     }
 
     const updates: { id: string; status: TaskStatus; position: number }[] = []
     targetIds.forEach((tid, i) => updates.push({ id: tid, status: targetStatus, position: i }))
     if (sourceStatus !== targetStatus) {
-      orderedIds(tasks, sourceStatus)
-        .filter((x) => x !== id)
-        .forEach((tid, i) => updates.push({ id: tid, status: sourceStatus, position: i }))
+      colIds(sourceStatus, aid).forEach((tid, i) => updates.push({ id: tid, status: sourceStatus, position: i }))
     }
 
-    // Update ottimistico (niente spinner: lo spostamento è istantaneo).
     setTasks((prev) =>
       prev.map((t) => {
         const u = updates.find((x) => x.id === t.id)
@@ -256,7 +297,14 @@ export function TaskBoard({
   const active = tasks.find((t) => t.id === activeId) ?? null
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDragCancel={clearDrag}
+    >
       {/* Header: Task · filtro · Nuovo */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <h1 className="font-display text-[26px] font-extrabold leading-none tracking-tight text-navy">Task</h1>
@@ -306,20 +354,50 @@ export function TaskBoard({
           )}
         </div>
       )}
+
       <div data-no-swipe className="no-scrollbar relative left-1/2 w-screen -translate-x-1/2 overflow-x-auto px-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
           {TASK_STATUS_ORDER.map((status) => (
             <Column
               key={status}
               status={status}
-              members={members}
               membersById={membersById}
-              tasks={filtered.filter((t) => t.status === status).sort((a, b) => a.position - b.position)}
+              indicator={indicator}
+              dragDisabled={detailOpen}
+              onOpen={(t) => setDetailTask(t)}
+              tasks={filtered.filter((t) => t.status === status && t.id !== activeId).sort((a, b) => a.position - b.position)}
             />
           ))}
         </motion.div>
       </div>
-      <DragOverlay>{active ? <TaskCard task={active} members={members} membersById={membersById} overlay /> : null}</DragOverlay>
+
+      <DragOverlay>
+        {active ? (
+          <div className="relative rounded-[10px] bg-white p-3 shadow-lg ring-1 ring-[#E0E4EB]">
+            <CardBody task={active} membersById={membersById} />
+          </div>
+        ) : null}
+      </DragOverlay>
+
+      {detailLive && (
+        <TaskDetail
+          task={{
+            id: detailLive.id,
+            title: detailLive.title,
+            description: detailLive.description,
+            project_id: detailLive.project_id,
+            projectName: detailLive.projectName,
+            projectColor: detailLive.projectColor,
+            priority_level: detailLive.priority_level,
+            status: detailLive.status,
+            due_date: detailLive.due_date,
+            assignee_ids: detailLive.assignee_ids,
+          }}
+          members={members}
+          open={detailOpen}
+          onClose={() => setDetailTask(null)}
+        />
+      )}
     </DndContext>
   )
 }

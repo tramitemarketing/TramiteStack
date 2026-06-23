@@ -3,7 +3,43 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { sendPushToUser } from '@/lib/push'
 import type { ProjectStatus, TaskStatus, TxType } from '@/types/database'
+
+// ---- Notifiche push (Web Push) ----
+export async function savePushSubscription(sub: { endpoint: string; p256dh: string; auth: string }) {
+  const supabase = await createClient()
+  const uid = await currentUserId()
+  if (!uid || !sub.endpoint) return
+  await supabase
+    .from('push_subscriptions')
+    .upsert({ user_id: uid, endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth }, { onConflict: 'endpoint' })
+}
+
+export async function removePushSubscription(endpoint: string) {
+  const supabase = await createClient()
+  await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint)
+}
+
+// Crea notifiche + push per le persone menzionate in un commento.
+export async function notifyTaskMention(taskId: string, userIds: string[], body: string) {
+  const supabase = await createClient()
+  const actor = await currentUserId()
+  const targets = [...new Set(userIds)].filter((u) => u && u !== actor)
+  await Promise.all(
+    targets.map(async (u) => {
+      await supabase.rpc('create_notification', {
+        p_user_id: u,
+        p_type: 'menzione',
+        p_title: 'Ti hanno menzionato in un commento',
+        p_body: body.slice(0, 120),
+        p_entity_type: 'task',
+        p_entity_id: taskId,
+      })
+      await sendPushToUser(u, { title: 'Ti hanno menzionato', body: body.slice(0, 120), url: '/tasks', tag: 'mention-' + taskId })
+    }),
+  )
+}
 
 async function currentUserId() {
   const supabase = await createClient()
@@ -107,16 +143,17 @@ export async function createTask(formData: FormData) {
     await Promise.all(
       assignees
         .filter((a) => a !== actor)
-        .map((a) =>
-          supabase.rpc('create_notification', {
+        .map(async (a) => {
+          await supabase.rpc('create_notification', {
             p_user_id: a,
             p_type: 'task_assegnata',
             p_title: 'Nuova task assegnata',
             p_body: title,
             p_entity_type: 'task',
             p_entity_id: created.id,
-          }),
-        ),
+          })
+          await sendPushToUser(a, { title: 'Nuova task assegnata', body: title, url: '/tasks', tag: 'task-' + created.id })
+        }),
     )
   }
 
@@ -212,16 +249,17 @@ export async function updateTask(formData: FormData) {
   await Promise.all(
     assignees
       .filter((a) => !prevSet.has(a) && a !== actor)
-      .map((a) =>
-        supabase.rpc('create_notification', {
+      .map(async (a) => {
+        await supabase.rpc('create_notification', {
           p_user_id: a,
           p_type: 'task_assegnata',
           p_title: 'Task assegnata a te',
           p_body: title,
           p_entity_type: 'task',
           p_entity_id: id,
-        }),
-      ),
+        })
+        await sendPushToUser(a, { title: 'Task assegnata a te', body: title, url: '/tasks', tag: 'task-' + id })
+      }),
   )
 
   revalidatePath('/tasks')
@@ -257,14 +295,16 @@ export async function createTransaction(formData: FormData) {
   // Notifica al titolare del movimento (se registrato da un altro)
   if (ownerId && ownerId !== uid && created?.id) {
     const segno = type === 'entrata' ? '+' : '−'
+    const text = `${segno} € ${amount} ${description ? '· ' + description : ''}`.trim()
     await supabase.rpc('create_notification', {
       p_user_id: ownerId,
       p_type: 'movimento',
       p_title: 'Nuovo movimento sul tuo bilancio',
-      p_body: `${segno} € ${amount} ${description ? '· ' + description : ''}`.trim(),
+      p_body: text,
       p_entity_type: 'transaction',
       p_entity_id: created.id,
     })
+    await sendPushToUser(ownerId, { title: 'Nuovo movimento sul tuo bilancio', body: text, url: '/budget', tag: 'tx-' + created.id })
   }
 
   revalidatePath('/budget')

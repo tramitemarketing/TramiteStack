@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendPushToUser } from '@/lib/push'
 
 // Endpoint cron: genera promemoria per i task in scadenza entro 2 giorni
 // che hanno un assegnatario e non hanno già una notifica.
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
         entity_type: 'task',
         entity_id: t.id,
       })
+      await sendPushToUser(uid, { title: 'Task in scadenza', body: `"${t.title}" scade il ${t.due_date}`, url: '/tasks', tag: 'due-' + t.id })
       created++
     }
   }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { notifyTaskMention } from '@/app/(app)/actions'
 import { Avatar } from '@/components/ui'
 import { IconTrash } from '@/components/icons'
 import { formatDate } from '@/lib/utils'
@@ -97,21 +98,10 @@ export function TaskComments({ taskId, members }: { taskId: string; members: Mem
     const supabase = createClient()
     const { error } = await supabase.from('task_comments').insert({ task_id: taskId, author_id: me, body })
     if (!error) {
-      // Notifica le persone menzionate (escluso l'autore)
+      // Notifica + push alle persone menzionate (escluso l'autore), lato server
       const names = [...body.matchAll(MENTION_RE)].map((x) => x[1].toLowerCase())
-      const mentioned = members.filter((m) => m.username && names.includes(m.username.toLowerCase()) && m.id !== me)
-      await Promise.all(
-        mentioned.map((m) =>
-          supabase.rpc('create_notification', {
-            p_user_id: m.id,
-            p_type: 'menzione',
-            p_title: 'Ti hanno menzionato in un commento',
-            p_body: body.slice(0, 120),
-            p_entity_type: 'task',
-            p_entity_id: taskId,
-          }),
-        ),
-      )
+      const mentioned = members.filter((m) => m.username && names.includes(m.username.toLowerCase()) && m.id !== me).map((m) => m.id)
+      if (mentioned.length) await notifyTaskMention(taskId, mentioned, body)
       setText('')
       await load()
     }

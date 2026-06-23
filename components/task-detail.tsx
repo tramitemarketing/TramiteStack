@@ -164,7 +164,7 @@ export function TaskDetail({
                   )}
                 </div>
                 <div className="border-t border-[#EFF1F5] pt-3">
-                  <TaskComments taskId={task.id} />
+                  <TaskComments taskId={task.id} members={members} />
                 </div>
                 <div className="flex gap-2 pt-1">
                   <button onClick={onDelete} disabled={pending} className="press flex items-center gap-1.5 rounded-[10px] px-4 py-3 font-bold text-danger ring-1 ring-[#F2C7BD] disabled:opacity-60">

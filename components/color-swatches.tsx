@@ -9,10 +9,10 @@ export function ColorSwatches({ name, value }: { name: string; value?: string | 
   return (
     <div className="flex flex-wrap gap-2.5">
       {PROJECT_PALETTE.map((c) => (
-        <label key={c} className="cursor-pointer">
+        <label key={c} className="flex h-9 w-9 cursor-pointer items-center justify-center">
           <input type="radio" name={name} value={c} defaultChecked={c === selected} className="peer sr-only" />
           <span
-            className="block h-7 w-7 rounded-full ring-2 ring-transparent ring-offset-2 ring-offset-white transition peer-checked:ring-[#1A1F2B]"
+            className="block h-7 w-7 rounded-full ring-2 ring-transparent ring-offset-2 ring-offset-white transition peer-checked:ring-[#1A1F2B] peer-focus-visible:ring-[#2A78C2]"
             style={{ backgroundColor: c }}
           />
         </label>

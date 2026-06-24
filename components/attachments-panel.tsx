@@ -110,7 +110,7 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
                   onClick={() => remove(f)}
                   disabled={deletingId === f.id}
                   aria-label="Elimina allegato"
-                  className="press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#FBEAE6] hover:text-danger disabled:opacity-50"
+                  className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#FBEAE6] hover:text-danger disabled:opacity-50"
                 >
                   {deletingId === f.id ? <span className="spinner" style={{ width: '0.9rem', height: '0.9rem' }} /> : <IconTrash size={16} />}
                 </button>

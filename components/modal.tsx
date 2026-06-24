@@ -14,12 +14,15 @@ export function Modal({
   open,
   onClose,
   title,
+  header,
   children,
   panelClassName,
 }: {
   open: boolean
   onClose: () => void
   title: string
+  /** Header visibile personalizzato (es. badge). Se assente, mostra `title`. */
+  header?: React.ReactNode
   children: React.ReactNode
   panelClassName?: string
 }) {
@@ -100,7 +103,8 @@ export function Modal({
             ref={panelRef}
             role="dialog"
             aria-modal="true"
-            aria-labelledby={titleId}
+            aria-label={header ? title : undefined}
+            aria-labelledby={header ? undefined : titleId}
             tabIndex={-1}
             className={cn('my-auto w-full max-w-md rounded-t-3xl bg-white p-5 outline-none sm:rounded-3xl', panelClassName)}
             initial={reduce ? false : { y: 40, opacity: 0.6 }}
@@ -110,9 +114,11 @@ export function Modal({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 id={titleId} className="font-display text-lg font-bold text-navy">
-                {title}
-              </h2>
+              {header ?? (
+                <h2 id={titleId} className="font-display text-lg font-bold text-navy">
+                  {title}
+                </h2>
+              )}
               <button
                 type="button"
                 onClick={onClose}

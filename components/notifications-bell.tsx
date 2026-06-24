@@ -33,8 +33,14 @@ export function NotificationsBell({ meId }: { meId: string }) {
     const onVis = () => { if (document.visibilityState === 'visible') void load() }
     document.addEventListener('visibilitychange', onVis)
     function onDocClick(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('click', onDocClick)
-    return () => { document.removeEventListener('visibilitychange', onVis); document.removeEventListener('click', onDocClick) }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('visibilitychange', onVis)
+      document.removeEventListener('click', onDocClick)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [load])
 
   const unread = notifs.filter((n) => !n.read_at).length + due.length
@@ -54,7 +60,7 @@ export function NotificationsBell({ meId }: { meId: string }) {
 
   return (
     <div className="relative" ref={ref}>
-      <button onClick={toggle} className="press relative flex h-9 w-9 items-center justify-center rounded-full text-[#3E4757] hover:bg-[#EFF1F5]" aria-label="Notifiche">
+      <button onClick={toggle} className="press relative flex h-9 w-9 items-center justify-center rounded-full text-[#3E4757] hover:bg-[#EFF1F5]" aria-label={unread > 0 ? `Notifiche, ${unread} non lette` : 'Notifiche'} aria-haspopup="menu" aria-expanded={open}>
         <IconBell size={21} />
         {unread > 0 && (
           <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white ring-2 ring-white" style={{ backgroundColor: 'var(--danger)' }}>

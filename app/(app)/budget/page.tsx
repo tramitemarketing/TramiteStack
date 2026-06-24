@@ -100,7 +100,7 @@ export default async function BudgetPage() {
                   </span>
                   <form action={deleteTransaction} className="shrink-0">
                     <input type="hidden" name="id" value={t.id} />
-                    <SubmitIcon label="Elimina movimento" className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#FBEAE6] hover:text-danger">
+                    <SubmitIcon label="Elimina movimento" className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#FBEAE6] hover:text-danger">
                       <IconTrash size={16} />
                     </SubmitIcon>
                   </form>

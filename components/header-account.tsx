@@ -22,18 +22,31 @@ export function HeaderAccount({ username, color }: { username: string | null; co
     function onDocClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('click', onDocClick)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [])
 
   return (
     <div className="relative" ref={ref}>
       {pending && <CenterSpinner />}
-      <button onClick={() => setOpen((v) => !v)} className="press rounded-full" aria-label="Account">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="press rounded-full"
+        aria-label="Account"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
         <Avatar name={username} size={36} color={color} />
       </button>
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl border border-[#E0E4EB] bg-white shadow-lg">
+        <div role="menu" className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl border border-[#E0E4EB] bg-white shadow-lg">
           <div className="border-b border-[#EFF1F5] px-3.5 py-2.5">
             <p className="text-[11px] font-semibold text-[#6B7280]">Accesso come</p>
             <p className="truncate text-sm font-bold text-[#1A1F2B]">{username || 'Utente'}</p>

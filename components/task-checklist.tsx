@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { IconTrash, IconPlus } from '@/components/icons'
+import { useToast } from '@/components/toast'
 
 type Item = { id: string; body: string; done: boolean; position: number }
 
@@ -11,6 +12,7 @@ export function TaskChecklist({ taskId }: { taskId: string }) {
   const [items, setItems] = useState<Item[]>([])
   const [text, setText] = useState('')
   const router = useRouter()
+  const toast = useToast()
 
   const load = useCallback(async () => {
     const supabase = createClient()
@@ -42,7 +44,11 @@ export function TaskChecklist({ taskId }: { taskId: string }) {
     const body = text.trim()
     if (!body) return
     const supabase = createClient()
-    await supabase.from('task_checklist').insert({ task_id: taskId, body, position: items.length })
+    const { error } = await supabase.from('task_checklist').insert({ task_id: taskId, body, position: items.length })
+    if (error) {
+      toast.error('Voce non aggiunta. Riprova.')
+      return
+    }
     setText('')
     const { data } = await supabase.from('task_checklist').select('id, body, done, position').eq('task_id', taskId).order('position').order('created_at')
     const list = (data as Item[]) ?? []
@@ -53,18 +59,30 @@ export function TaskChecklist({ taskId }: { taskId: string }) {
 
   async function toggle(item: Item) {
     const supabase = createClient()
+    const prev = items
     const next = items.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i))
     setItems(next)
-    await supabase.from('task_checklist').update({ done: !item.done }).eq('id', item.id)
+    const { error } = await supabase.from('task_checklist').update({ done: !item.done }).eq('id', item.id)
+    if (error) {
+      setItems(prev)
+      toast.error('Aggiornamento non riuscito. Riprova.')
+      return
+    }
     await applyStatus(next)
     router.refresh()
   }
 
   async function remove(item: Item) {
     const supabase = createClient()
+    const prev = items
     const next = items.filter((i) => i.id !== item.id)
     setItems(next)
-    await supabase.from('task_checklist').delete().eq('id', item.id)
+    const { error } = await supabase.from('task_checklist').delete().eq('id', item.id)
+    if (error) {
+      setItems(prev)
+      toast.error('Eliminazione non riuscita. Riprova.')
+      return
+    }
     await applyStatus(next)
     router.refresh()
   }

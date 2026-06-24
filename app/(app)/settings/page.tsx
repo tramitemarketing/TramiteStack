@@ -5,12 +5,10 @@ import { updateRegistrationCode } from '@/app/(app)/actions'
 import { SubmitButton } from '@/components/submit-button'
 import { InstallButton } from '@/components/install-button'
 import { PushButton } from '@/components/push-button'
+import { inputCls } from '@/components/field'
 import type { Profile } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
-
-const inputCls =
-  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export default async function SettingsPage() {
   const profile = await requireProfile()
@@ -67,8 +65,8 @@ export default async function SettingsPage() {
             Codice condiviso necessario per registrarsi. Cambialo quando vuoi: i nuovi iscritti dovranno usare quello aggiornato.
           </p>
           <form action={updateRegistrationCode} className="flex gap-2">
-            <input name="registration_code" defaultValue={code ?? ''} required className={inputCls} />
-            <SubmitButton pendingLabel="…" className="rounded-[10px] px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--brand)' }}>
+            <input name="registration_code" defaultValue={code ?? ''} required className={inputCls} aria-label="Nome collaborazione" />
+            <SubmitButton size="sm" pendingLabel="…">
               Salva
             </SubmitButton>
           </form>

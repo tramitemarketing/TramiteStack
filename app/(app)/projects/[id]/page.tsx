@@ -84,7 +84,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {/* Elimina progetto */}
       <form action={deleteProject}>
         <input type="hidden" name="id" value={p.id} />
-        <SubmitButton pendingLabel="Eliminazione…" className="rounded-[10px] px-3 py-2 text-sm font-bold text-danger ring-1 ring-[#F2C7BD]">
+        <SubmitButton variant="secondary" size="sm" className="text-danger ring-[#F2C7BD]" pendingLabel="Eliminazione…">
           <IconTrash size={16} /> Elimina progetto
         </SubmitButton>
       </form>

@@ -2,22 +2,28 @@
 
 import { useFormStatus } from 'react-dom'
 import { cn } from '@/lib/utils'
+import { buttonClasses, type ButtonVariant, type ButtonSize } from '@/components/button'
 
 // Bottone di submit con spinner inline (niente overlay a tutto schermo).
+// Riusa le classi di Button per coerenza visiva nei form server-action.
 export function SubmitButton({
   children,
   className,
   pendingLabel,
-  style,
+  variant = 'primary',
+  size = 'md',
+  fullWidth,
 }: {
   children: React.ReactNode
   className?: string
   pendingLabel?: string
-  style?: React.CSSProperties
+  variant?: ButtonVariant
+  size?: ButtonSize
+  fullWidth?: boolean
 }) {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} className={cn('press inline-flex items-center justify-center gap-2 disabled:opacity-70', className)} style={style}>
+    <button type="submit" disabled={pending} aria-busy={pending || undefined} className={buttonClasses(variant, size, fullWidth, className)}>
       {pending && <span className="spinner" style={{ width: '1rem', height: '1rem', borderTopColor: 'currentColor' }} />}
       {pending && pendingLabel ? pendingLabel : children}
     </button>

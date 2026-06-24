@@ -7,6 +7,8 @@ import { Avatar } from '@/components/ui'
 import { IconTrash } from '@/components/icons'
 import { formatDate } from '@/lib/utils'
 import type { MemberInfo } from '@/components/assignees'
+import { Button } from '@/components/button'
+import { useToast } from '@/components/toast'
 
 type Comment = {
   id: string
@@ -41,6 +43,7 @@ export function TaskComments({ taskId, members }: { taskId: string; members: Mem
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
   const mentionStart = useRef(0)
   const taRef = useRef<HTMLTextAreaElement>(null)
+  const toast = useToast()
 
   const load = useCallback(async () => {
     const supabase = createClient()
@@ -104,13 +107,19 @@ export function TaskComments({ taskId, members }: { taskId: string; members: Mem
       if (mentioned.length) await notifyTaskMention(taskId, mentioned, body)
       setText('')
       await load()
+    } else {
+      toast.error('Commento non inviato. Riprova.')
     }
     setBusy(false)
   }
 
   async function remove(id: string) {
     const supabase = createClient()
-    await supabase.from('task_comments').delete().eq('id', id)
+    const { error } = await supabase.from('task_comments').delete().eq('id', id)
+    if (error) {
+      toast.error('Eliminazione non riuscita. Riprova.')
+      return
+    }
     await load()
   }
 
@@ -164,14 +173,9 @@ export function TaskComments({ taskId, members }: { taskId: string; members: Mem
           placeholder="Scrivi un commento…  (usa @ per menzionare)"
           className="min-h-[42px] w-full resize-none rounded-[10px] border border-[#E0E4EB] px-3 py-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]"
         />
-        <button
-          onClick={send}
-          disabled={busy || !text.trim()}
-          className="press shrink-0 rounded-[10px] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          style={{ backgroundColor: 'var(--brand)' }}
-        >
+        <Button onClick={send} disabled={busy || !text.trim()} size="sm" loading={busy} className="shrink-0">
           Invia
-        </button>
+        </Button>
       </div>
     </div>
   )

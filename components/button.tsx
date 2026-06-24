@@ -20,8 +20,17 @@ const VARIANTS: Record<ButtonVariant, string> = {
   danger: 'bg-[#D8553F] text-white shadow-sm hover:bg-[#c4452f]',
 }
 
-function classes(variant: ButtonVariant, size: ButtonSize, fullWidth?: boolean, className?: string) {
+export function buttonClasses(
+  variant: ButtonVariant = 'primary',
+  size: ButtonSize = 'md',
+  fullWidth?: boolean,
+  className?: string,
+) {
   return cn(BASE, SIZES[size], VARIANTS[variant], fullWidth && 'w-full', className)
+}
+
+function classes(variant: ButtonVariant, size: ButtonSize, fullWidth?: boolean, className?: string) {
+  return buttonClasses(variant, size, fullWidth, className)
 }
 
 export function Button({

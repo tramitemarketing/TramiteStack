@@ -76,7 +76,7 @@ export function TaskChecklist({ taskId }: { taskId: string }) {
     <div>
       <div className="mb-1 flex items-center justify-between">
         <p className="text-xs font-bold text-[#5A6473]">Checklist {items.length > 0 && `(${done}/${items.length})`}</p>
-        {items.length > 0 && <span className="text-[11px] font-bold text-[#9CA5B3] tnum">{pct}%</span>}
+        {items.length > 0 && <span className="text-[11px] font-bold text-[#6B7280] tnum">{pct}%</span>}
       </div>
       {items.length > 0 && (
         <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-[#EFF1F5]">
@@ -87,8 +87,8 @@ export function TaskChecklist({ taskId }: { taskId: string }) {
         {items.map((i) => (
           <div key={i.id} className="flex items-center gap-2.5 rounded-lg px-1 py-1 hover:bg-[#F7F8FA]">
             <input type="checkbox" checked={i.done} onChange={() => toggle(i)} className="h-4 w-4 shrink-0 accent-[#0F4C81]" />
-            <span className={i.done ? 'flex-1 text-sm font-medium text-[#9CA5B3] line-through' : 'flex-1 text-sm font-medium text-[#3E4757]'}>{i.body}</span>
-            <button onClick={() => remove(i)} aria-label="Elimina voce" className="press text-[#C4CBD6] hover:text-danger">
+            <span className={i.done ? 'flex-1 text-sm font-medium text-[#6B7280] line-through' : 'flex-1 text-sm font-medium text-[#3E4757]'}>{i.body}</span>
+            <button onClick={() => remove(i)} aria-label="Elimina voce" className="press text-[#6B7280] hover:text-danger">
               <IconTrash size={14} />
             </button>
           </div>

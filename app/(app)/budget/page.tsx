@@ -64,7 +64,7 @@ export default async function BudgetPage() {
               <p className={cn('mt-2 font-display text-lg font-extrabold tnum', Number(t.balance) >= 0 ? 'text-ok' : 'text-danger')}>
                 {formatEuro(Number(t.balance))}
               </p>
-              <p className="text-[11px] font-semibold text-[#9CA5B3]">
+              <p className="text-[11px] font-semibold text-[#6B7280]">
                 +{formatEuro(Number(t.total_income))} · −{formatEuro(Number(t.total_expense))}
               </p>
             </Card>
@@ -93,14 +93,14 @@ export default async function BudgetPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.description || t.category || 'Movimento'}</p>
-                    <p className="truncate text-[11px] font-semibold text-[#9CA5B3]">{t.owner?.username ?? '—'} · {formatDate(t.occurred_on, 'd MMM')}</p>
+                    <p className="truncate text-[11px] font-semibold text-[#6B7280]">{t.owner?.username ?? '—'} · {formatDate(t.occurred_on, 'd MMM')}</p>
                   </div>
                   <span className={cn('shrink-0 whitespace-nowrap font-display text-sm font-extrabold tnum', entrata ? 'text-ok' : 'text-danger')}>
                     {entrata ? '+' : '−'} {formatEuro(Number(t.amount))}
                   </span>
                   <form action={deleteTransaction} className="shrink-0">
                     <input type="hidden" name="id" value={t.id} />
-                    <SubmitIcon label="Elimina movimento" className="flex h-7 w-7 items-center justify-center rounded-lg text-[#C4CBD6] hover:bg-[#FBEAE6] hover:text-danger">
+                    <SubmitIcon label="Elimina movimento" className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#FBEAE6] hover:text-danger">
                       <IconTrash size={16} />
                     </SubmitIcon>
                   </form>

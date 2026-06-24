@@ -101,7 +101,7 @@ export default async function PersonalAreaPage() {
         <Avatar name={me.username} size={48} color={me.color} />
         <div className="min-w-0">
           <p className="font-display text-lg font-bold text-[#1A1F2B]">{me.username || 'Utente'}</p>
-          <p className="text-xs font-semibold text-[#9CA5B3]">
+          <p className="text-xs font-semibold text-[#6B7280]">
             {me.role === 'admin' ? 'Amministratore' : 'Membro'} · iscritto il {formatDate(me.created_at, 'd MMM yyyy')}
           </p>
         </div>
@@ -114,7 +114,7 @@ export default async function PersonalAreaPage() {
           {(Object.keys(counts) as TaskStatus[]).map((s) => (
             <Card key={s} className="p-3">
               <p className={cn('font-display text-2xl font-extrabold tnum', STAT_STYLE[s])}>{counts[s]}</p>
-              <p className="text-[11px] font-bold text-[#9CA5B3]">{STAT_LABEL[s]}</p>
+              <p className="text-[11px] font-bold text-[#6B7280]">{STAT_LABEL[s]}</p>
             </Card>
           ))}
         </div>
@@ -124,7 +124,7 @@ export default async function PersonalAreaPage() {
       <section>
         <h2 className="mb-2 font-display font-bold text-[#1A1F2B]">Progetti coinvolti ({projects.length})</h2>
         {projects.length === 0 ? (
-          <p className="text-sm font-medium text-[#9CA5B3]">Non sei ancora coinvolto in progetti.</p>
+          <p className="text-sm font-medium text-[#6B7280]">Non sei ancora coinvolto in progetti.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {projects.map((p) => (
@@ -148,7 +148,7 @@ export default async function PersonalAreaPage() {
                 <ActivityIcon kind={a.kind} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-[#1A1F2B]">{a.text}</p>
-                  <p className="text-[11px] font-semibold text-[#9CA5B3]">{formatDate(a.date, 'd MMM yyyy')}</p>
+                  <p className="text-[11px] font-semibold text-[#6B7280]">{formatDate(a.date, 'd MMM yyyy')}</p>
                 </div>
                 {a.amount != null && (
                   <span className={cn('shrink-0 whitespace-nowrap font-display text-sm font-extrabold tnum', a.kind === 'entrata' ? 'text-ok' : 'text-danger')}>

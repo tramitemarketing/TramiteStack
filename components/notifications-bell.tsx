@@ -70,7 +70,7 @@ export function NotificationsBell({ meId }: { meId: string }) {
           </div>
 
           {due.length === 0 && notifs.length === 0 ? (
-            <p className="px-3.5 py-6 text-center text-sm font-medium text-[#9CA5B3]">Nessuna notifica.</p>
+            <p className="px-3.5 py-6 text-center text-sm font-medium text-[#6B7280]">Nessuna notifica.</p>
           ) : (
             <ul className="divide-y divide-[#EFF1F5]">
               {due.map((d) => (
@@ -90,7 +90,7 @@ export function NotificationsBell({ meId }: { meId: string }) {
                   <div className="min-w-0">
                     <p className="text-[13px] font-bold text-[#1A1F2B]">{n.title}</p>
                     {n.body && <p className="truncate text-[12px] font-medium text-[#5A6473]">{n.body}</p>}
-                    <p className="text-[10px] font-semibold text-[#9CA5B3]">{formatDate(n.created_at, 'd MMM')}</p>
+                    <p className="text-[10px] font-semibold text-[#6B7280]">{formatDate(n.created_at, 'd MMM')}</p>
                   </div>
                 </li>
               ))}

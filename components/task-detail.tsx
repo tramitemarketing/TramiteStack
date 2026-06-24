@@ -102,7 +102,7 @@ export function TaskDetail({
               <span className="rounded-md px-2 py-0.5 text-[11px] font-bold" style={{ backgroundColor: `${tagColor}22`, color: tagColor }}>
                 {task.projectName ?? 'Senza progetto'}
               </span>
-              <button onClick={close} className="text-slate-400">✕</button>
+              <button onClick={close} className="text-slate-500">✕</button>
             </div>
 
             {editing ? (
@@ -147,7 +147,7 @@ export function TaskDetail({
                   <TaskStatusBadge status={task.status} />
                   <PriorityBadge level={task.priority_level} />
                   {task.due_date && (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-[#9CA5B3]">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-[#6B7280]">
                       <IconClock size={14} /> {formatDate(task.due_date, 'd MMM yyyy')}
                     </span>
                   )}
@@ -161,7 +161,7 @@ export function TaskDetail({
                   {task.description ? (
                     <p className="whitespace-pre-wrap text-sm font-medium text-[#3E4757]">{task.description}</p>
                   ) : (
-                    <p className="text-sm font-medium text-[#9CA5B3]">Nessuna descrizione.</p>
+                    <p className="text-sm font-medium text-[#6B7280]">Nessuna descrizione.</p>
                   )}
                 </div>
                 <div className="border-t border-[#EFF1F5] pt-3">

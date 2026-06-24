@@ -34,7 +34,7 @@ export default async function SettingsPage() {
           <Avatar name={profile.username} color={profile.color} />
           <div>
             <p className="text-sm font-semibold">{profile.username || 'Username non impostato'}</p>
-            <p className="text-xs text-slate-400">{profile.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+            <p className="text-xs text-slate-500">{profile.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
           </div>
         </div>
       </Card>
@@ -51,7 +51,7 @@ export default async function SettingsPage() {
                 <Avatar name={m.username} color={m.color} />
                 <div>
                   <p className="text-sm font-semibold">{m.username || 'Utente'}</p>
-                  <p className="text-xs text-slate-400">{m.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
+                  <p className="text-xs text-slate-500">{m.role === 'admin' ? 'Amministratore' : 'Membro'}</p>
                 </div>
               </div>
               {!m.active && <span className="text-xs text-red-500">disattivato</span>}

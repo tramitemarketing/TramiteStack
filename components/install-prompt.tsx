@@ -68,7 +68,7 @@ export function InstallPrompt() {
                 Installa
               </button>
             )}
-            <button onClick={dismiss} className="press p-1 text-slate-400" aria-label="Chiudi">✕</button>
+            <button onClick={dismiss} className="press p-1 text-slate-500" aria-label="Chiudi">✕</button>
           </div>
         </motion.div>
       )}

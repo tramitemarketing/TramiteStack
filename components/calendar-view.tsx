@@ -81,7 +81,7 @@ export function CalendarView({
         <MonthGridSkeleton />
       ) : (
       <div data-no-swipe className="rounded-2xl bg-white p-3 ring-1 ring-[#E0E4EB]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-        <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#9CA5B3]">
+        <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#6B7280]">
           {['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((d, i) => <div key={i}>{d}</div>)}
         </div>
         <div className="mt-1 grid grid-cols-7 gap-0.5">
@@ -96,7 +96,7 @@ export function CalendarView({
                 onClick={() => setSelected(key)}
                 className={cn(
                   'press flex aspect-square flex-col items-center justify-center rounded-[9px] text-[13px] font-semibold transition',
-                  out ? 'text-[#C4CBD6]' : 'text-[#3E4757]',
+                  out ? 'text-[#6B7280]' : 'text-[#3E4757]',
                   isToday(d) && !isSel && 'text-brand font-extrabold',
                   isSel && 'font-extrabold text-white',
                 )}
@@ -132,12 +132,12 @@ export function CalendarView({
                 <span className="h-7 w-1 shrink-0 rounded-full" style={{ background: KIND_COLOR[it.kind] }} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-bold text-[#1A1F2B]">{it.title}</p>
-                  <p className="text-[11px] font-semibold text-[#9CA5B3]">{KIND_LABEL[it.kind]}</p>
+                  <p className="text-[11px] font-semibold text-[#6B7280]">{KIND_LABEL[it.kind]}</p>
                 </div>
                 {it.eventId && (
                   <form action={deleteEvent}>
                     <input type="hidden" name="id" value={it.eventId} />
-                    <SubmitIcon label="Elimina evento" className="p-1 text-[#C4CBD6] hover:text-danger">
+                    <SubmitIcon label="Elimina evento" className="p-1 text-[#6B7280] hover:text-danger">
                       <IconTrash size={16} />
                     </SubmitIcon>
                   </form>
@@ -155,7 +155,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-2 py-3 text-center">
       <EmptyCalendar />
-      <p className="text-sm font-semibold text-[#9CA5B3]">Niente in programma.</p>
+      <p className="text-sm font-semibold text-[#6B7280]">Niente in programma.</p>
     </div>
   )
 }
@@ -164,7 +164,7 @@ function EmptyState() {
 function MonthGridSkeleton() {
   return (
     <div data-no-swipe className="rounded-2xl bg-white p-3 ring-1 ring-[#E0E4EB]">
-      <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#9CA5B3]">
+      <div className="grid grid-cols-7 text-center text-[10px] font-bold text-[#6B7280]">
         {['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((d, i) => <div key={i}>{d}</div>)}
       </div>
       <div className="mt-1 grid grid-cols-7 gap-0.5">

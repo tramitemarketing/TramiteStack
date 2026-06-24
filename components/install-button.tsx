@@ -27,7 +27,7 @@ export function InstallButton() {
         <LogoMark size={40} boxed />
         <div>
           <h2 className="font-display font-bold text-[#1A1F2B]">Installa l&apos;app</h2>
-          <p className="text-xs font-medium text-[#9CA5B3]">Apri T-Stack come un&apos;app, a tutto schermo.</p>
+          <p className="text-xs font-medium text-[#6B7280]">Apri T-Stack come un&apos;app, a tutto schermo.</p>
         </div>
       </div>
 

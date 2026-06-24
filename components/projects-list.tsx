@@ -25,12 +25,12 @@ export function ProjectsList({ projects }: { projects: ProjectRow[] }) {
     <div className="space-y-3">
       {/* Ricerca */}
       <div className="flex items-center gap-2.5 rounded-[10px] border border-[#E0E4EB] bg-white px-3 py-2.5">
-        <IconSearch size={17} className="text-[#9CA5B3]" />
+        <IconSearch size={17} className="text-[#6B7280]" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Cerca progetto…"
-          className="w-full bg-transparent text-sm font-medium text-[#1A1F2B] outline-none placeholder:text-[#9CA5B3]"
+          className="w-full bg-transparent text-sm font-medium text-[#1A1F2B] outline-none placeholder:text-[#6B7280]"
         />
       </div>
 
@@ -55,7 +55,7 @@ export function ProjectsList({ projects }: { projects: ProjectRow[] }) {
                 </div>
                 <div className="flex items-center justify-between">
                   <ProjectStatusBadge status={p.status} />
-                  {p.due_date && <span className="text-[11px] font-semibold text-[#9CA5B3]">{formatDate(p.due_date, 'd MMM')}</span>}
+                  {p.due_date && <span className="text-[11px] font-semibold text-[#6B7280]">{formatDate(p.due_date, 'd MMM')}</span>}
                 </div>
                 {p.taskCount > 0 && <ProgressBar done={p.done} total={p.taskCount} />}
               </Card>

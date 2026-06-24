@@ -24,9 +24,10 @@ export function BottomNav() {
             <li key={href} className="flex-1">
               <Link
                 href={href}
+                aria-current={active ? 'page' : undefined}
                 className={cn(
                   'press flex flex-col items-center gap-1 px-1 py-2.5 text-[10px] font-bold transition',
-                  active ? 'text-brand' : 'text-[#9CA5B3]',
+                  active ? 'text-brand' : 'text-[#6B7280]',
                 )}
               >
                 <span

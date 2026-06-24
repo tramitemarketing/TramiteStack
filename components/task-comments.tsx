@@ -125,9 +125,9 @@ export function TaskComments({ taskId, members }: { taskId: string; members: Mem
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[11px] font-bold text-[#1A1F2B]">{c.author?.username || 'Utente'}</span>
                 <span className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-semibold text-[#9CA5B3]">{formatDate(c.created_at, 'd MMM')}</span>
+                  <span className="text-[10px] font-semibold text-[#6B7280]">{formatDate(c.created_at, 'd MMM')}</span>
                   {c.author_id === me && (
-                    <button onClick={() => remove(c.id)} aria-label="Elimina commento" className="press text-[#C4CBD6] hover:text-danger">
+                    <button onClick={() => remove(c.id)} aria-label="Elimina commento" className="press text-[#6B7280] hover:text-danger">
                       <IconTrash size={14} />
                     </button>
                   )}
@@ -137,7 +137,7 @@ export function TaskComments({ taskId, members }: { taskId: string; members: Mem
             </div>
           </div>
         ))}
-        {comments.length === 0 && <p className="text-sm font-medium text-[#9CA5B3]">Ancora nessun commento.</p>}
+        {comments.length === 0 && <p className="text-sm font-medium text-[#6B7280]">Ancora nessun commento.</p>}
       </div>
 
       <div className="relative mt-3 flex items-end gap-2">

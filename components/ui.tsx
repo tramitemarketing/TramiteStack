@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { ButtonLink } from '@/components/button'
 import {
   PROJECT_STATUS_LABEL,
   TASK_STATUS_LABEL,
@@ -63,7 +63,7 @@ export function EmptyState({
       {illustration}
       <div>
         <p className="font-display font-bold text-[#1A1F2B]">{title}</p>
-        {hint && <p className="mt-1 text-sm font-medium text-[#9CA5B3]">{hint}</p>}
+        {hint && <p className="mt-1 text-sm font-medium text-[#6B7280]">{hint}</p>}
       </div>
       {action}
     </div>
@@ -72,13 +72,9 @@ export function EmptyState({
 
 export function PrimaryLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link
-      href={href}
-      className="press inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2.5 text-sm font-bold text-white shadow-sm"
-      style={{ backgroundColor: 'var(--brand)' }}
-    >
+    <ButtonLink href={href} size="sm">
       {children}
-    </Link>
+    </ButtonLink>
   )
 }
 
@@ -141,7 +137,7 @@ export function ProgressBar({ done, total }: { done: number; total: number }) {
   const pct = total ? Math.round((done / total) * 100) : 0
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-[11px] font-semibold text-[#9CA5B3]">
+      <div className="flex items-center justify-between text-[11px] font-semibold text-[#6B7280]">
         <span>{done}/{total} task completate</span>
         <span className="tnum">{pct}%</span>
       </div>

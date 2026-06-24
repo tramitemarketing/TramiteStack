@@ -54,12 +54,27 @@ function clampPriority(v: unknown): number {
   return Math.min(5, Math.max(1, n))
 }
 
+// Ritorno uniforme delle mutation: il client distingue successo/errore.
+export type ActionResult = { ok: true } | { ok: false; error: string }
+const ok: ActionResult = { ok: true }
+const fail = (error: string): ActionResult => ({ ok: false, error })
+
+// Parsing importo robusto: accetta sia "12,50" (IT) sia "12.50".
+function parseAmount(v: unknown): number {
+  const raw = String(v ?? '').trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.')
+  // Se l'utente usa il punto come decimale (es. "12.50") il replace sopra lo
+  // toglierebbe: gestiamo entrambi i casi provando prima il valore grezzo.
+  const direct = Number(String(v ?? '').trim().replace(',', '.'))
+  const n = Number.isFinite(direct) && direct > 0 ? direct : Number(raw)
+  return Number.isFinite(n) ? n : NaN
+}
+
 // ---- Progetti ----
-export async function createProject(formData: FormData) {
+export async function createProject(_prev: ActionResult | undefined, formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const name = String(formData.get('name') ?? '').trim()
-  if (!name) return
-  const { data } = await supabase
+  if (!name) return fail('Inserisci il titolo del progetto.')
+  const { data, error } = await supabase
     .from('projects')
     .insert({
       name,
@@ -71,9 +86,9 @@ export async function createProject(formData: FormData) {
     })
     .select('id')
     .single()
+  if (error) return fail('Creazione del progetto non riuscita. Riprova.')
   revalidatePath('/projects')
-  if (data?.id) redirect(`/projects/${data.id}`)
-  redirect('/projects')
+  redirect(data?.id ? `/projects/${data.id}` : '/projects')
 }
 
 export async function setProjectStatus(formData: FormData) {
@@ -96,12 +111,13 @@ export async function deleteProject(formData: FormData) {
 }
 
 // Modifica completa di un progetto
-export async function updateProject(formData: FormData) {
+export async function updateProject(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const id = String(formData.get('id'))
   const name = String(formData.get('name') ?? '').trim()
-  if (!id || !name) return
-  await supabase
+  if (!id) return fail('Progetto non trovato.')
+  if (!name) return fail('Inserisci il titolo del progetto.')
+  const { error } = await supabase
     .from('projects')
     .update({
       name,
@@ -112,19 +128,22 @@ export async function updateProject(formData: FormData) {
       due_date: String(formData.get('due_date') ?? '') || null,
     })
     .eq('id', id)
+  if (error) return fail('Salvataggio non riuscito. Riprova.')
   revalidatePath('/projects')
   revalidatePath(`/projects/${id}`)
   revalidatePath('/calendar')
+  return ok
 }
 
 // ---- Task ----
-export async function createTask(formData: FormData) {
+export async function createTask(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const projectId = String(formData.get('project_id'))
   const title = String(formData.get('title') ?? '').trim()
-  if (!title || !projectId) return
+  if (!title) return fail('Inserisci il titolo del task.')
+  if (!projectId) return fail('Seleziona un progetto.')
   const assignees = formData.getAll('assignee_ids').map(String).filter(Boolean)
-  const { data: created } = await supabase
+  const { data: created, error } = await supabase
     .from('tasks')
     .insert({
       project_id: projectId,
@@ -136,6 +155,7 @@ export async function createTask(formData: FormData) {
     })
     .select('id')
     .single()
+  if (error) return fail('Creazione del task non riuscita. Riprova.')
 
   // Notifica a ogni assegnatario (escluso chi crea)
   const actor = await currentUserId()
@@ -160,6 +180,7 @@ export async function createTask(formData: FormData) {
   revalidatePath(`/projects/${projectId}`)
   revalidatePath('/tasks')
   revalidatePath('/calendar')
+  return ok
 }
 
 // Spostamento drag&drop: nuovo stato + posizione nella colonna
@@ -170,14 +191,17 @@ export async function moveTask(id: string, status: TaskStatus, position: number)
 }
 
 // Riordino/spostamento drag&drop: aggiorna stato + posizione di più task.
-export async function reorderTasks(items: { id: string; status: TaskStatus; position: number }[]) {
-  if (!items.length) return
+// Ritorna esito così la board può fare rollback ottimistico in caso di errore.
+export async function reorderTasks(items: { id: string; status: TaskStatus; position: number }[]): Promise<ActionResult> {
+  if (!items.length) return ok
   const supabase = await createClient()
-  await Promise.all(
+  const results = await Promise.all(
     items.map((it) => supabase.from('tasks').update({ status: it.status, position: it.position }).eq('id', it.id)),
   )
+  const failed = results.some((r) => r.error)
   revalidatePath('/tasks')
   revalidatePath('/calendar')
+  return failed ? fail('Spostamento non salvato. Riprova.') : ok
 }
 
 // Cambio stato di una singola task (box nei Progetti)
@@ -223,18 +247,19 @@ export async function deleteTask(formData: FormData) {
 }
 
 // Modifica completa di una task
-export async function updateTask(formData: FormData) {
+export async function updateTask(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const id = String(formData.get('id'))
   const title = String(formData.get('title') ?? '').trim()
-  if (!id || !title) return
+  if (!id) return fail('Task non trovato.')
+  if (!title) return fail('Inserisci il titolo del task.')
   const assignees = formData.getAll('assignee_ids').map(String).filter(Boolean)
 
   // Assegnatari precedenti (per notificare solo i nuovi)
   const { data: prev } = await supabase.from('tasks').select('assignee_ids').eq('id', id).maybeSingle()
   const prevSet = new Set((prev as { assignee_ids: string[] | null } | null)?.assignee_ids ?? [])
 
-  await supabase
+  const { error } = await supabase
     .from('tasks')
     .update({
       title,
@@ -244,6 +269,7 @@ export async function updateTask(formData: FormData) {
       assignee_ids: assignees,
     })
     .eq('id', id)
+  if (error) return fail('Salvataggio non riuscito. Riprova.')
 
   const actor = await currentUserId()
   await Promise.all(
@@ -266,18 +292,20 @@ export async function updateTask(formData: FormData) {
   revalidatePath('/calendar')
   const projectId = String(formData.get('project_id') ?? '')
   if (projectId) revalidatePath(`/projects/${projectId}`)
+  return ok
 }
 
 // ---- Transazioni (bilancio personale) ----
-export async function createTransaction(formData: FormData) {
+export async function createTransaction(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const uid = await currentUserId()
   const type = String(formData.get('type') ?? 'entrata') as TxType
-  const amount = Number(formData.get('amount') ?? 0)
+  const amount = parseAmount(formData.get('amount'))
   const ownerId = String(formData.get('owner_id') ?? '') || uid
-  if (!amount || amount <= 0 || !ownerId) return
+  if (!Number.isFinite(amount) || amount <= 0) return fail('Inserisci un importo valido maggiore di zero.')
+  if (!ownerId) return fail('Seleziona il dipendente.')
   const description = String(formData.get('description') ?? '') || null
-  const { data: created } = await supabase
+  const { data: created, error } = await supabase
     .from('transactions')
     .insert({
       type,
@@ -291,6 +319,7 @@ export async function createTransaction(formData: FormData) {
     })
     .select('id')
     .single()
+  if (error) return fail('Registrazione del movimento non riuscita. Riprova.')
 
   // Notifica al titolare del movimento (se registrato da un altro)
   if (ownerId && ownerId !== uid && created?.id) {
@@ -309,6 +338,7 @@ export async function createTransaction(formData: FormData) {
 
   revalidatePath('/budget')
   revalidatePath('/dashboard')
+  return ok
 }
 
 export async function deleteTransaction(formData: FormData) {
@@ -319,21 +349,26 @@ export async function deleteTransaction(formData: FormData) {
 }
 
 // ---- Eventi calendario ----
-export async function createEvent(formData: FormData) {
+export async function createEvent(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
   const uid = await currentUserId()
   const title = String(formData.get('title') ?? '').trim()
   const startsAt = String(formData.get('starts_at') ?? '')
-  if (!title || !startsAt) return
-  await supabase.from('calendar_events').insert({
+  if (!title) return fail('Inserisci il titolo dell’evento.')
+  if (!startsAt) return fail('Inserisci data e ora.')
+  const when = new Date(startsAt)
+  if (Number.isNaN(when.getTime())) return fail('Data e ora non valide.')
+  const { error } = await supabase.from('calendar_events').insert({
     title,
     description: String(formData.get('description') ?? '') || null,
-    starts_at: new Date(startsAt).toISOString(),
+    starts_at: when.toISOString(),
     all_day: formData.get('all_day') === 'on',
     project_id: String(formData.get('project_id') ?? '') || null,
     created_by: uid,
   })
+  if (error) return fail('Creazione dell’evento non riuscita. Riprova.')
   revalidatePath('/calendar')
+  return ok
 }
 
 export async function deleteEvent(formData: FormData) {

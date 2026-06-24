@@ -79,7 +79,8 @@
   --background: #F7F8FA;   /* Slate-50 */
   --surface: #FFFFFF;
   --foreground: #1A1F2B;   /* Slate-900 */
-  --muted: #5A6473;        /* Slate-600 */
+  --muted: #5A6473;        /* Slate-600 · AA su bianco (5.9:1) */
+  --muted-soft: #6B7280;   /* Slate-500 · AA su bianco (5.0:1) — sostituisce #9CA5B3 */
   --hairline: #E0E4EB;     /* Slate-200 */
 
   --brand: #0F4C81;        /* Stack Blue 800 */
@@ -128,7 +129,12 @@ html {
   -webkit-tap-highlight-color: transparent;
   background: var(--background);
   color: var(--foreground);
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
 }
+
+/* Paragrafi e testo lungo: interlinea più ariosa per la leggibilità. */
+p { line-height: 1.6; }
 
 /* Titoli e numeri chiave in Sora */
 .font-display { font-family: var(--font-display); }
@@ -172,6 +178,39 @@ html {
 /* Feedback immediato sui bottoni */
 button, a, [role="button"] { transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease; }
 .press:active { transform: scale(0.97); }
+
+/* ===== Accessibilità · focus visibile da tastiera =====
+   Anello uniforme su tutti gli elementi interattivi raggiungibili da Tab.
+   Usa :focus-visible così il mouse non mostra l'anello, la tastiera sì. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+/* I campi form hanno già un anello dedicato (ring) gestito via classe. */
+/* Sugli elementi scuri (es. CTA brand) l'anello resta visibile grazie all'offset;
+   su sfondo brand usiamo un anello chiaro per il contrasto. */
+.on-brand:focus-visible {
+  outline-color: #fff;
+  box-shadow: 0 0 0 4px rgba(15, 76, 129, 0.35);
+}
+
+/* ===== Rispetto delle preferenze di movimento ridotto ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after { animation: none; }
+}
 
 /* Texture leggera a punti (stati vuoti / hero) */
 .dot-grid {

@@ -68,7 +68,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       <div className="flex flex-wrap items-center gap-3">
         <PriorityBadge level={p.priority_level} />
         {p.due_date && (
-          <span className="flex items-center gap-1 text-xs font-semibold text-[#9CA5B3]">
+          <span className="flex items-center gap-1 text-xs font-semibold text-[#6B7280]">
             <IconClock size={14} /> scadenza {formatDate(p.due_date, 'd MMM yyyy')}
           </span>
         )}
@@ -104,7 +104,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             ))}
           </div>
         )}
-        <p className="mt-2 text-center text-[11px] font-medium text-[#9CA5B3]">Trascina i task tra gli stati dalla pagina <strong>Task</strong>.</p>
+        <p className="mt-2 text-center text-[11px] font-medium text-[#6B7280]">Trascina i task tra gli stati dalla pagina <strong>Task</strong>.</p>
       </section>
 
       {/* Allegati */}

@@ -80,7 +80,7 @@ export function PushButton() {
         <span className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-brand-50 text-brand"><IconBell size={20} /></span>
         <div>
           <h2 className="font-display font-bold text-[#1A1F2B]">Notifiche push</h2>
-          <p className="text-xs font-medium text-[#9CA5B3]">Ricevile anche con l&apos;app chiusa.</p>
+          <p className="text-xs font-medium text-[#6B7280]">Ricevile anche con l&apos;app chiusa.</p>
         </div>
       </div>
       {!supported ? (
@@ -90,7 +90,7 @@ export function PushButton() {
       ) : enabled ? (
         <div className="flex items-center justify-between gap-2">
           <p className="rounded-[10px] bg-[#E6F3EC] px-3 py-2 text-sm font-bold text-ok">✓ Attive su questo dispositivo</p>
-          <button onClick={disable} disabled={busy} className="press text-sm font-semibold text-[#9CA5B3]">Disattiva</button>
+          <button onClick={disable} disabled={busy} className="press text-sm font-semibold text-[#6B7280]">Disattiva</button>
         </div>
       ) : (
         <button

@@ -31,6 +31,13 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    // Limite dimensione: evita upload accidentali di file enormi.
+    const MAX_BYTES = 25 * 1024 * 1024
+    if (file.size > MAX_BYTES) {
+      setError('File troppo grande: massimo 25 MB.')
+      e.target.value = ''
+      return
+    }
     setUploading(true)
     setError(null)
     try {
@@ -89,13 +96,13 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         {files.length === 0 ? (
-          <p className="text-sm text-slate-400">Nessun allegato.</p>
+          <p className="text-sm text-slate-500">Nessun allegato.</p>
         ) : (
           <ul className="space-y-1.5">
             {files.map((f) => (
               <li key={f.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[#F7F8FA]">
                 <button onClick={() => download(f)} className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm">
-                  <IconFile size={16} className="shrink-0 text-[#9CA5B3]" />
+                  <IconFile size={16} className="shrink-0 text-[#6B7280]" />
                   <span className="truncate text-[#1A1F2B]">{f.file_name}</span>
                   <span className="ml-auto shrink-0 text-xs font-bold text-brand">Scarica</span>
                 </button>
@@ -103,7 +110,7 @@ export function AttachmentsPanel({ projectId }: { projectId: string }) {
                   onClick={() => remove(f)}
                   disabled={deletingId === f.id}
                   aria-label="Elimina allegato"
-                  className="press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#C4CBD6] hover:bg-[#FBEAE6] hover:text-danger disabled:opacity-50"
+                  className="press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#FBEAE6] hover:text-danger disabled:opacity-50"
                 >
                   {deletingId === f.id ? <span className="spinner" style={{ width: '0.9rem', height: '0.9rem' }} /> : <IconTrash size={16} />}
                 </button>

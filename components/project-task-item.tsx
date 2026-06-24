@@ -60,7 +60,7 @@ export function ProjectTaskItem({
         <div className="mt-2 flex items-center justify-between">
           <PriorityBadge level={task.priority_level} />
           <div className="flex items-center gap-2.5">
-            {task.due_date && <span className="text-[11px] font-semibold text-[#9CA5B3]">{formatDate(task.due_date, 'd MMM')}</span>}
+            {task.due_date && <span className="text-[11px] font-semibold text-[#6B7280]">{formatDate(task.due_date, 'd MMM')}</span>}
             <Assignees ids={task.assignee_ids} membersById={membersById} withName size={20} />
           </div>
         </div>

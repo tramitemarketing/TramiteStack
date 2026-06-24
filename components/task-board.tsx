@@ -30,6 +30,7 @@ import { Assignees, type MemberInfo } from '@/components/assignees'
 import { TaskDetail } from '@/components/task-detail'
 import { CreateTaskButton } from '@/components/create-task'
 import { IconFilter, IconCheck } from '@/components/icons'
+import { useToast } from '@/components/toast'
 
 export type BoardTask = Task & {
   projectName: string | null
@@ -68,7 +69,7 @@ function CardBody({ task, membersById }: { task: BoardTask; membersById: Map<str
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EFF1F5]">
               <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: pct === 100 ? 'var(--ok)' : 'var(--brand)' }} />
             </div>
-            <span className="text-[10px] font-bold text-[#9CA5B3] tnum">{task.checklistDone}/{task.checklistTotal}</span>
+            <span className="text-[10px] font-bold text-[#6B7280] tnum">{task.checklistDone}/{task.checklistTotal}</span>
           </div>
         )}
         <div className="mt-2 flex items-center justify-between gap-2">
@@ -136,7 +137,7 @@ function Column({
       <div className="mb-2 flex items-center gap-2 px-1">
         <span className={cn('h-2.5 w-2.5 rounded-[3px]', COLUMN_DOT[status])} />
         <span className="font-display text-[13px] font-bold text-[#3E4757]">{TASK_STATUS_LABEL[status]}</span>
-        <span className="text-[11px] font-bold text-[#9CA5B3]">{tasks.length}</span>
+        <span className="text-[11px] font-bold text-[#6B7280]">{tasks.length}</span>
       </div>
       <div
         ref={setNodeRef}
@@ -152,7 +153,7 @@ function Column({
           </div>
         ))}
         {lineAt(tasks.length) && <DropLine />}
-        {tasks.length === 0 && !lineAt(0) && <p className="py-6 text-center text-[11px] font-medium text-[#C4CBD6]">trascina qui</p>}
+        {tasks.length === 0 && !lineAt(0) && <p className="py-6 text-center text-[11px] font-medium text-[#6B7280]">trascina qui</p>}
       </div>
     </div>
   )
@@ -175,6 +176,7 @@ export function TaskBoard({
   const indicatorRef = useRef<Indicator | null>(null)
   const [detailTask, setDetailTask] = useState<BoardTask | null>(null)
   const [, startTransition] = useTransition()
+  const toast = useToast()
 
   // Filtri
   const [showFilters, setShowFilters] = useState(false)
@@ -283,14 +285,21 @@ export function TaskBoard({
       colIds(sourceStatus, aid).forEach((tid, i) => updates.push({ id: tid, status: sourceStatus, position: i }))
     }
 
-    setTasks((prev) =>
-      prev.map((t) => {
+    let snapshot: BoardTask[] | null = null
+    setTasks((prev) => {
+      snapshot = prev
+      return prev.map((t) => {
         const u = updates.find((x) => x.id === t.id)
         return u ? { ...t, status: u.status, position: u.position } : t
-      }),
-    )
+      })
+    })
     startTransition(async () => {
-      await reorderTasks(updates)
+      const res = await reorderTasks(updates)
+      if (res && !res.ok) {
+        // Rollback ottimistico: ripristina lo stato precedente allo spostamento.
+        if (snapshot) setTasks(snapshot)
+        toast.error(res.error)
+      }
     })
   }
 
@@ -348,7 +357,7 @@ export function TaskBoard({
             ))}
           </select>
           {filtersActive && (
-            <button type="button" onClick={() => { setMineOnly(false); setProjectFilter('') }} className="press ml-auto text-[12px] font-semibold text-[#9CA5B3]">
+            <button type="button" onClick={() => { setMineOnly(false); setProjectFilter('') }} className="press ml-auto text-[12px] font-semibold text-[#6B7280]">
               Azzera
             </button>
           )}

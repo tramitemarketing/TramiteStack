@@ -38,7 +38,7 @@ export default async function DashboardPage() {
       {/* Header: data + saluto + account */}
       <header className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold capitalize text-[#9CA5B3]">{formatDate(today, 'EEEE d MMMM')}</p>
+          <p className="text-xs font-semibold capitalize text-[#6B7280]">{formatDate(today, 'EEEE d MMMM')}</p>
           <h1 className="font-display text-[23px] font-extrabold tracking-tight text-navy">
             Ciao {profile.username || ''} 👋
           </h1>
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
                 <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', priorityColor(t.priority_level))} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-[#1A1F2B]">{t.title}</p>
-                  <p className="truncate text-[11px] font-semibold text-[#9CA5B3]">{t.projects?.name ?? 'Senza progetto'}</p>
+                  <p className="truncate text-[11px] font-semibold text-[#6B7280]">{t.projects?.name ?? 'Senza progetto'}</p>
                 </div>
                 <TaskStatusBadge status={t.status} />
               </Card>

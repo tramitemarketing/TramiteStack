@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { useActionState } from 'react'
 import { signIn } from './actions'
 import { LogoMark } from '@/components/logo'
+import { Button } from '@/components/button'
+import { Field, inputCls, FormError } from '@/components/field'
 
 const initialState: { error?: string } = {}
-const inputCls =
-  'w-full rounded-[10px] border border-[#E0E4EB] px-3.5 py-3 text-base outline-none transition focus:border-brand focus:ring-2 focus:ring-[#B3D2F0]'
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(signIn, initialState)
@@ -22,26 +22,18 @@ export default function LoginPage() {
         </div>
 
         <form action={formAction} className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-semibold text-slate-700">Email <span className="text-danger">*</span></label>
+          <Field label="Email" htmlFor="email" required>
             <input id="email" name="email" type="email" autoComplete="email" required className={inputCls} placeholder="nome@tramitemarketing.it" />
-          </div>
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-semibold text-slate-700">Password <span className="text-danger">*</span></label>
+          </Field>
+          <Field label="Password" htmlFor="password" required>
             <input id="password" name="password" type="password" autoComplete="current-password" required className={inputCls} placeholder="••••••••" />
-          </div>
+          </Field>
 
-          {state?.error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>}
+          <FormError message={state?.error} />
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="press flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-white disabled:opacity-60"
-            style={{ backgroundColor: 'var(--brand)' }}
-          >
-            {pending && <span className="spinner" style={{ borderTopColor: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} />}
-            {pending ? 'Accesso…' : 'Accedi'}
-          </button>
+          <Button type="submit" fullWidth loading={pending} loadingLabel="Accesso…">
+            Accedi
+          </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">

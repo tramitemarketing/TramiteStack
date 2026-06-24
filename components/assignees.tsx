@@ -18,7 +18,7 @@ export function Assignees({
   size?: number
 }) {
   if (!ids || ids.length === 0) {
-    return <span className="text-[11px] font-semibold text-[#C4CBD6]">Non assegnata</span>
+    return <span className="text-[11px] font-semibold text-[#6B7280]">Non assegnata</span>
   }
   if (ids.length === 1 && withName) {
     const m = membersById.get(ids[0])
